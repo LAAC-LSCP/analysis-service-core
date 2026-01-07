@@ -1,0 +1,23 @@
+# -- MacOS junk -- #
+.DS_Store
+
+# -- Created by VSCode -- #
+settings.json
+.vscode
+
+# -- redis -- #
+dump.rdb
+
+# -- local env file for if I want to skip containers while debugging -- #
+.local-env
+
+# -- bitcode -- #
+__pycache__/
+
+# -- build -- #
+dist/
+
+# -- created by tox -- #
+.tox
+.mypy_cache
+.pytest_cache
