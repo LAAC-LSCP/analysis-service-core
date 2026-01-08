@@ -31,7 +31,7 @@ class Channels:
         return {channel.name for channel in self._channels}
 
     @property
-    def events(self) -> Set[Type[commands.Command]]:
+    def commands(self) -> Set[Type[commands.Command]]:
         return {channel.command for channel in self._channels}
 
     @property

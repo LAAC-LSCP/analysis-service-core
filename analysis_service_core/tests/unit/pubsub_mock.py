@@ -2,6 +2,7 @@ from typing import Iterable, List, TypedDict
 
 from analysis_service_core.src.redis.channels import ChannelName
 from analysis_service_core.src.redis.pubsub import PubSub
+from analysis_service_core.src.redis.commands import Command
 
 
 class Data(TypedDict):
@@ -11,7 +12,7 @@ class Data(TypedDict):
 
 
 class Message(TypedDict):
-    channel_name: ChannelName
+    channel: ChannelName
     data: Data
 
 
@@ -25,14 +26,25 @@ class PubSubMock(PubSub):
         messages: List[Message] = [],
     ):
         self._channel_names = subscribe_to
-        self._messages = messages
+        self._messages = messages.copy()
 
-    def publish(self, _: ChannelName) -> None:  # type: ignore
-        pass
+    def publish(self, channel_name: ChannelName, cmd: Command) -> None:  # type: ignore
+        self._messages.append({
+            "channel": channel_name,
+            "data": cmd.to_dict(),
+        })
+
+    def get_message(self, timeout: int) -> dict:
+        if self._messages:
+            return self._messages.pop(0)
+        return {}
 
     def listen(self) -> Iterable[Message]:  # type: ignore
-        for message in self._messages:
-            yield message
+        while self._messages:
+            yield self._messages.pop(0)
 
     def get_data_from_message(self, message) -> Data:  # type: ignore
         return message["data"]
+
+    def get_channel_from_message(self, message: dict) -> ChannelName:
+        return ChannelName(message["channel"])

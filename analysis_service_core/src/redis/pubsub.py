@@ -53,5 +53,11 @@ class PubSub:
     def listen(self) -> Iterable[dict]:
         return self._pubsub.listen()
 
+    def get_message(self, timeout: int) -> dict:
+        return self._pubsub.get_message(timeout=timeout, ignore_subscribe_messages=True)
+
     def get_data_from_message(self, message: dict) -> dict:
         return json.loads(message["data"].decode("utf-8"))
+
+    def get_channel_from_message(self, message: dict) -> ChannelName:
+        return ChannelName(message["channel"].decode("utf-8"))
