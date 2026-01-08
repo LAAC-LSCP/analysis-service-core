@@ -55,10 +55,9 @@ class ModelPlugin(ABC):
             dataset_dir = self._get_dataset_dir(run_task)
             output_dir = self._get_output_dir(run_task)
 
-            if not (dataset_dir).exists():
+            if not dataset_dir.exists():
                 print(
-                    f"Dataset '{run_task.dataset_uid_label}' not found in \
-'{self._config.get("DATASETS_DIR")}'. Cannot run model."
+                    f"Dataset at '{str(dataset_dir)}' not found. Cannot run model."
                 )
                 continue
 
