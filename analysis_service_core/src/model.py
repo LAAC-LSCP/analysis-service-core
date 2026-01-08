@@ -56,9 +56,7 @@ class ModelPlugin(ABC):
             output_dir = self._get_output_dir(run_task)
 
             if not dataset_dir.exists():
-                print(
-                    f"Dataset at '{str(dataset_dir)}' not found. Cannot run model."
-                )
+                print(f"Dataset at '{str(dataset_dir)}' not found. Cannot run model.")
                 continue
 
             try:

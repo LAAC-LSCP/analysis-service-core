@@ -6,9 +6,9 @@ import pytest
 from pytest import TempPathFactory
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.testing.mocks.pubsub import PubSubMock
 from analysis_service_core.tests.conftest import TempDatasetFactory
 from analysis_service_core.tests.models.word_count_model import WordCountModel
-from analysis_service_core.tests.unit.pubsub_mock import PubSubMock
 
 
 @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ def word_count_model_factory(
 
         return (
             WordCountModel(
-                pubsub=pubsub_mock,
+                pubsub=pubsub_mock,  # type: ignore
                 model_output_folder=model_output_folder,
                 config=config,
             ),
