@@ -20,7 +20,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 packages = [
-    {include = "analysis_service_core/src"}
+    {include = "analysis_service_core/src"},
+    {include = "analysis_service_core/testing"},
 ]
 
 
