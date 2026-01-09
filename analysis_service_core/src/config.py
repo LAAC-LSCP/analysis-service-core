@@ -7,10 +7,10 @@ from typing import Any, Set, Type, Union
 @dataclass(frozen=True)
 class EnvVar:
     key: str
-    type: Type[Path] | Type[str] | Type[int] | Type[float]
+    type: Type[Path] | Type[str] | Type[int] | Type[float] | Type[bool]
 
 
-type Value = Union[Path, int, str, float]
+type Value = Union[Path, int, str, float, bool]
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ class Config:
             value = Path(env_value)
 
             if not value.exists():
-                raise ValueError(
+                raise FileNotFoundError(
                     f"Env var \
 '{env_var.key}' corresponds to non-existent path"
                 )
@@ -71,17 +71,21 @@ class Config:
 
             value = int(env_value)
         elif var_type == float:
-            if not env_value.isdecimal():
+            try:
+                float(env_value)
+            except Exception:
                 raise ValueError(
                     f"Cannot convert \
 '{env_value}' to float for '{env_var.key}'"
                 )
 
             value = float(env_value)
+        elif var_type == bool:
+            value = env_value.lower() in ["yes", "y", "true", "1", "on"]
         else:
             raise ValueError(
                 f"env_var type '{str(env_var.type)}' not \
-`Path`, `str`, `int` or `float`"
+`Path`, `str`, `int`, `float`, or `bool`"
             )
 
         return ValuedEnvVar(key=env_var.key, value=value)

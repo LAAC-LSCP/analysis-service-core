@@ -1,7 +1,15 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Literal
+from enum import StrEnum
 from uuid import UUID
+
+
+class Operation(StrEnum):
+    RUN_VTC = "run_vtc"
+    RUN_VTC_2 = "run_vtc_2"
+    RUN_ALICE = "run_alice"
+    RUN_W2V2 = "run_w2v2"
+    RUN_ACOUSTICS = "run_acoustics"
 
 
 class Command(ABC):
@@ -19,7 +27,7 @@ class Command(ABC):
 class RunTask(Command):
     task_id: UUID
     dataset_uid_label: str
-    operation: Literal["vtc"]
+    operation: Operation
 
     def to_dict(self) -> dict:
         return {
