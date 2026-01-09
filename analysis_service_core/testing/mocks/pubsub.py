@@ -28,6 +28,9 @@ class PubSubMock:
         self._messages = messages.copy()
 
     def publish(self, channel_name: ChannelName, cmd: Command) -> None:  # type: ignore
+        if channel_name not in self._channel_names:
+            return
+
         self._messages.append(
             {
                 "channel": channel_name,
