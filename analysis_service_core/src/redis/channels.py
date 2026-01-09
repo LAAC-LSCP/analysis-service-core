@@ -8,6 +8,10 @@ from analysis_service_core.src.redis import commands
 class ChannelName(StrEnum):
     COMPLETE_TASK = "complete_task"
     RUN_VTC = "run_vtc"
+    RUN_VTC_2 = "run_vtc_2"
+    RUN_ALICE = "run_alice"
+    RUN_W2V2 = "run_w2v2"
+    RUN_ACOUSTICS = "run_acoustics"
 
 
 @dataclass(frozen=True)
