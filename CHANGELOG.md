@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.2.0...v0.3.0) (2026-01-09)
+
+
+### Features
+
+* add more models ([c905c9f](https://github.com/LAAC-LSCP/analysis-service-core/commit/c905c9fb78d4cc609abd0d71aeac97207c672bb4))
+
 ## [0.2.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.1.0...v0.2.0) (2026-01-08)
 
 
