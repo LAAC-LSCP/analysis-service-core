@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.3.0...v0.3.1) (2026-01-09)
+
+
+### Bug Fixes
+
+* **pubsub:** fix pubsub mock ([7ecb89c](https://github.com/LAAC-LSCP/analysis-service-core/commit/7ecb89cc42a1ada796f2c26372c709250726d9ea))
+
 ## [0.3.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.2.0...v0.3.0) (2026-01-09)
 
 
