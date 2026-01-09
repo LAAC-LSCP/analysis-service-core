@@ -23,7 +23,7 @@ class PubSub:
 
         self._pubsub = self._r.pubsub(ignore_subscribe_messages=True)
 
-        self._pubsub.subscribe([channel_name.value for channel_name in subscribe_to])
+        self._pubsub.subscribe([str(channel_name) for channel_name in subscribe_to])
 
     def _get_redis_host_and_port(self) -> RedisInfo:
         redis_host: str | None = os.environ.get("REDIS_HOST", None)
