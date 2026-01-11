@@ -1,24 +1,25 @@
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
+from time import sleep
 from uuid import UUID
 
 from analysis_service_core.src.config import Config
-from analysis_service_core.src.redis.channels import ChannelName
 from analysis_service_core.src.redis.commands import CompleteTask, RunTask
-from analysis_service_core.src.redis.pubsub import PubSub
+from analysis_service_core.src.redis.queue import Queue, QueueName
 
 
 class ModelPlugin(ABC):
     # TODO: Think about how partial failure should be represented
-    _pubsub: PubSub
+    _queue: Queue
+    _completion_queue: Queue
     _config: Config
     _skip_moving_files: bool
     _model_output_folder: Path | None = None
 
     def __init__(
         self,
-        pubsub: PubSub,
+        queue: Queue,
         config: Config,
         skip_moving_files: bool = False,
     ):
@@ -26,7 +27,8 @@ class ModelPlugin(ABC):
         self._reset_output_folder()
 
         print("Starting model...")
-        self._pubsub = pubsub
+        self._queue = queue
+        self._completion_queue = Queue(QueueName.COMPLETE_TASK)
         self._config = config
         self._skip_moving_files = skip_moving_files
 
@@ -43,35 +45,48 @@ class ModelPlugin(ABC):
             self.model_output_folder.mkdir(parents=True)
 
     def run(self) -> None:
-        for message in self._pubsub.listen():
-            try:
-                data = self._pubsub.get_data_from_message(message)
-                run_task = RunTask.from_dict(dict_repr=data)
+        command: dict = self._wait_for_message()
 
-            except Exception as e:
-                print(f"Could not handle incoming Redis message '{message}': {e}")
-                continue
+        try:
+            run_task = RunTask.from_dict(dict_repr=command)
+        except Exception as e:
+            print(
+                f"Could not handle incoming Redis command '{command}': \
+{e}... Stopping model."
+            )
 
-            dataset_dir = self._get_dataset_dir(run_task)
-            output_dir = self._get_output_dir(run_task)
+            return
 
-            if not dataset_dir.exists():
-                print(f"Dataset at '{str(dataset_dir)}' not found. Cannot run model.")
-                continue
+        dataset_dir = self._get_dataset_dir(run_task)
+        output_dir = self._get_output_dir(run_task)
 
-            try:
-                self.run_model(dataset_dir, output_dir)
+        if not dataset_dir.exists():
+            print(f"Dataset at '{str(dataset_dir)}' not found. Cannot run model.")
 
-                if not self._skip_moving_files:
-                    self._move_files(run_task)
+            return
 
-                print("Model ran successfully. Publishing to redis...")
-                self._pubsub.publish(
-                    ChannelName.COMPLETE_TASK, CompleteTask(task_id=run_task.task_id)
-                )
-            except Exception as e:
-                print(f"Problem running model for task {str(message)}: {str(e)}")
-                continue
+        try:
+            self.run_model(dataset_dir, output_dir)
+
+            if not self._skip_moving_files:
+                self._move_files(run_task)
+
+            print("Model ran successfully. Publishing to redis...")
+            self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+        except Exception as e:
+            print(f"Problem running model for task {str(command)}: {str(e)}")
+
+            return
+
+    def _wait_for_message(self) -> dict:
+        command: dict | None = None
+
+        while command is None:
+            command = self._queue.dequeue()
+
+            sleep(1)
+
+        return command
 
     def _move_files(self, run_task: RunTask) -> None:
         if self.model_output_folder is None:

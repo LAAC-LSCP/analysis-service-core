@@ -6,7 +6,7 @@ import pytest
 from pytest import TempPathFactory
 
 from analysis_service_core.src.config import Config
-from analysis_service_core.testing.mocks.pubsub import PubSubMock
+from analysis_service_core.testing.mocks.queue import QueueMock
 from analysis_service_core.tests.conftest import TempDatasetFactory
 from analysis_service_core.tests.models.word_count_model import WordCountModel
 
@@ -87,18 +87,15 @@ def word_count_model_factory(
         else:
             model_output_folder = None
 
-        pubsub_mock = PubSubMock(
-            subscribe_to=["RUN_WORD_COUNT_MODEL"],  # type: ignore
+        queue_mock = QueueMock(
             messages=[
                 {
-                    "channel_name": "RUN_WORD_COUNT_MODEL",  # type: ignore
-                    "data": {
-                        "task_id": str(task_uid),
-                        "dataset_uid_label": f"my-dataset_{str(dataset_uid)}",
-                        "operation": "word-count",
-                    },
+                    "task_id": str(task_uid),
+                    "dataset_uid_label": f"my-dataset_{str(dataset_uid)}",
+                    "operation": "word-count",
                 }
             ],
+            name="RUN_WORD_COUNT_MODEL",  # type: ignore
         )
 
         config = Config(check_required=False)
@@ -108,9 +105,9 @@ def word_count_model_factory(
 
         return (
             WordCountModel(
-                pubsub=pubsub_mock,  # type: ignore
-                model_output_folder=model_output_folder,
+                queue=queue_mock,  # type: ignore
                 config=config,
+                model_output_folder=model_output_folder,
             ),
             temp_dataset,
             temp_echolalia_dir,
