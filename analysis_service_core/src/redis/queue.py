@@ -2,7 +2,7 @@ import json
 import os
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Optional, Set, Type
+from typing import Optional, Type
 
 import redis
 
@@ -64,57 +64,3 @@ class Queue:
         if item is not None:
             return json.loads(item)  # type: ignore
         return None
-
-
-class Queues:
-    """
-    Wrapper for Redis queue management
-    """
-
-    _queues: Set[QueueDict]
-
-    def __init__(self, queues: Set[QueueDict]):
-        self._queues = queues
-
-    @property
-    def queue_names(self) -> Set[str]:
-        return {queue.name for queue in self._queues}
-
-    @property
-    def commands(self) -> Set[Type[commands.Command]]:
-        return {queue.command for queue in self._queues}
-
-    @property
-    def queues(self) -> Set[QueueDict]:
-        return self._queues
-
-
-def get_queues() -> Queues:
-    return Queues(
-        {
-            QueueDict(
-                name=QueueName.RUN_ACOUSTICS,
-                command=commands.RunTask,
-            ),
-            QueueDict(
-                name=QueueName.RUN_ALICE,
-                command=commands.RunTask,
-            ),
-            QueueDict(
-                name=QueueName.RUN_VTC,
-                command=commands.RunTask,
-            ),
-            QueueDict(
-                name=QueueName.RUN_VTC_2,
-                command=commands.RunTask,
-            ),
-            QueueDict(
-                name=QueueName.RUN_W2V2,
-                command=commands.RunTask,
-            ),
-            QueueDict(
-                name=QueueName.COMPLETE_TASK,
-                command=commands.CompleteTask,
-            ),
-        }
-    )
