@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.5.0...v0.6.0) (2026-01-12)
+
+
+### Features
+
+* add custom errors ([3253e85](https://github.com/LAAC-LSCP/analysis-service-core/commit/3253e8500c7cdfeb325c865ab2538450f9c6340b))
+
 ## [0.5.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.4.0...v0.5.0) (2026-01-12)
 
 
