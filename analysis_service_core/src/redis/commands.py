@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
 
+from analysis_service_core.src import errors
+
 
 class Operation(StrEnum):
     RUN_VTC = "run_vtc"
@@ -38,11 +40,14 @@ class RunTask(Command):
 
     @classmethod
     def from_dict(self, dict_repr: dict) -> "RunTask":
-        return RunTask(
-            task_id=UUID(dict_repr["task_id"]),
-            dataset_uid_label=dict_repr["dataset_uid_label"],
-            operation=dict_repr["operation"],
-        )
+        try:
+            return RunTask(
+                task_id=UUID(dict_repr["task_id"]),
+                dataset_uid_label=dict_repr["dataset_uid_label"],
+                operation=dict_repr["operation"],
+            )
+        except Exception as e:
+            raise errors.InvalidTaskFormat(dict_repr) from e
 
 
 @dataclass
