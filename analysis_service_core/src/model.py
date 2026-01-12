@@ -5,8 +5,11 @@ from time import sleep
 from uuid import UUID
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import CompleteTask, RunTask
 from analysis_service_core.src.redis.queue import Queue, QueueName
+
+logger = LoggerFactory.get_logger(__name__)
 
 
 class ModelPlugin(ABC):
@@ -26,7 +29,7 @@ class ModelPlugin(ABC):
         self._validate(skip_moving_files)
         self._reset_output_folder()
 
-        print("Starting model...")
+        logger.info("Starting model...")
         self._queue = queue
         self._completion_queue = Queue(QueueName.COMPLETE_TASK)
         self._config = config
@@ -53,7 +56,9 @@ class ModelPlugin(ABC):
         output_dir = self._get_output_dir(run_task)
 
         if not dataset_dir.exists():
-            print(f"Dataset at '{str(dataset_dir)}' not found. Cannot run model.")
+            logger.error(
+                f"Dataset at '{str(dataset_dir)}' not found. Cannot run model."
+            )
 
             return
 
@@ -63,10 +68,10 @@ class ModelPlugin(ABC):
             if not self._skip_moving_files:
                 self._move_files(run_task)
 
-            print("Model ran successfully. Publishing to redis...")
+            logger.info("Model ran successfully. Publishing to redis...")
             self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
         except Exception as e:
-            print(f"Problem running model for task {str(command)}: {str(e)}")
+            logger.error(f"Problem running model for task {str(command)}: {str(e)}")
 
             return
 

@@ -7,9 +7,12 @@ from typing import Optional, Type
 import redis
 
 from analysis_service_core.src import errors
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis import commands
 from analysis_service_core.src.redis.commands import Command
 from analysis_service_core.src.redis.core_types import RedisInfo
+
+logger = LoggerFactory.get_logger(__name__)
 
 
 class QueueName(StrEnum):
@@ -47,11 +50,11 @@ class Queue:
         redis_port: int = int(os.environ.get("REDIS_PORT", 0))
 
         if redis_host is None:
-            print("'REDIS_HOST' env variable is not set, using 'localhost'")
+            logger.warning("'REDIS_HOST' env variable is not set, using 'localhost'")
             redis_host = "localhost"
 
         if redis_port == 0:
-            print("'REDIS_PORT' env variable is not set, using '6379'")
+            logger.warning("'REDIS_PORT' env variable is not set, using '6379'")
             redis_port = 6379
 
         return {

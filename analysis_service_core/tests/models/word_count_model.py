@@ -2,8 +2,11 @@ from pathlib import Path
 from typing import List, Optional
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.model import ModelPlugin
 from analysis_service_core.src.redis.queue import Queue
+
+logger = LoggerFactory.get_logger(__name__)
 
 
 class WordCountModel(ModelPlugin):
@@ -52,5 +55,5 @@ class WordCountModel(ModelPlugin):
                 words = content.split()
                 return len(words)
         except Exception as e:
-            print(f"Error reading file {file}: {e}")
+            logger.error(f"Error reading file {file}: {e}")
             return 0
