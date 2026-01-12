@@ -15,6 +15,14 @@ class Operation(StrEnum):
 
 
 class Command(ABC):
+    """
+    A generic class for wrapping commands
+
+    Commands in this context are pushed and pulled to and
+    from queues, basically as a means for services to
+    communicate
+    """
+
     task_id: UUID
 
     def to_dict(self) -> dict:
@@ -27,6 +35,11 @@ class Command(ABC):
 
 @dataclass
 class RunTask(Command):
+    """
+    `RunTask` commands encapsulate the action of
+    running a task
+    """
+
     task_id: UUID
     dataset_uid_label: str
     operation: Operation
@@ -52,6 +65,11 @@ class RunTask(Command):
 
 @dataclass
 class CompleteTask(Command):
+    """
+    `CompleteTask` commands encapsulate the action of
+    running a task
+    """
+
     task_id: UUID
 
     def to_dict(self) -> dict:

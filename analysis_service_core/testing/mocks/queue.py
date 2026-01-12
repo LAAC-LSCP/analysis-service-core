@@ -6,6 +6,14 @@ from analysis_service_core.src.redis.queue import QueueName
 
 
 class QueueMock:
+    """
+    A mock implementation of a message queue for testing purposes.
+
+    This class simulates basic queue operations such as enqueue and dequeue,
+    storing messages in memory. It is useful for unit tests where interaction
+    with a real external queue is not required.
+    """
+
     _name: QueueName
     _messages: List[dict]
 

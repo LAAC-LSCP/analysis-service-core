@@ -4,6 +4,7 @@ from pathlib import Path
 from time import sleep
 from uuid import UUID
 
+from analysis_service_core.src import errors
 from analysis_service_core.src.config import Config
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import CompleteTask, RunTask
@@ -13,6 +14,32 @@ logger = LoggerFactory.get_logger(__name__)
 
 
 class ModelPlugin(ABC):
+    """
+    Abstract base class for machine learning model plugins in the analysis service.
+
+    This class defines the interface and common logic for running models, handling
+    input/output directories,
+    processing tasks from a queue, and publishing results. Subclasses must implement
+    the `run_model` method to define model-specific execution logic.
+
+    Features:
+        - Polls a queue for incoming tasks and processes them.
+        - Handles dataset and output directory management.
+        - Publishes completion messages to a completion queue.
+        - Provides hooks for file movement and output folder management.
+        - Uses a preconfigured logger for status and error reporting.
+
+    Subclasses should implement:
+        - `run_model(dataset_dir: Path, output_dir: Path)`: The core model execution
+            logic.
+
+    Example:
+        class MyModel(ModelPlugin):
+            def run_model(self, dataset_dir: Path, output_dir: Path) -> None:
+                # Model-specific logic here
+                pass
+    """
+
     _QUEUE_POLL_FREQ_S: int = 1
     _queue: Queue
     _completion_queue: Queue
@@ -26,6 +53,19 @@ class ModelPlugin(ABC):
         config: Config,
         skip_moving_files: bool = False,
     ):
+        """
+        Initialize the model plugin with the given queue, configuration, and options.
+
+        Args:
+            queue (Queue): The queue from which to receive tasks for this model.
+            config (Config): The configuration object with environment settings.
+            skip_moving_files (bool, optional): If True, disables moving output files
+                after model run. Defaults to False.
+
+        Raises:
+            ValueError: If `skip_moving_files` is False and `model_output_folder` is
+                not set.
+        """
         self._validate(skip_moving_files)
         self._reset_output_folder()
 
@@ -64,16 +104,16 @@ class ModelPlugin(ABC):
 
         try:
             self.run_model(dataset_dir, output_dir)
-
-            if not self._skip_moving_files:
-                self._move_files(run_task)
-
-            logger.info("Model ran successfully. Publishing to redis...")
-            self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
         except Exception as e:
             logger.error(f"Problem running model for task {str(command)}: {str(e)}")
 
-            return
+            raise errors.RunModelFailed() from e
+
+        if not self._skip_moving_files:
+            self._move_files(run_task)
+
+        logger.info("Model ran successfully. Publishing to redis...")
+        self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
 
     def _wait_for_message(self) -> dict:
         command: dict | None = None
@@ -121,6 +161,13 @@ class ModelPlugin(ABC):
 
     @property
     def model_output_folder(self) -> Path | None:
+        """
+        The working directory for model output files.
+
+        If set, this directory is used for intermediate or
+        final model outputs.
+        If None, the output directory is determined per task.
+        """
         return self._model_output_folder
 
     @model_output_folder.setter
@@ -129,4 +176,14 @@ class ModelPlugin(ABC):
 
     @abstractmethod
     def run_model(self, dataset_dir: Path, output_dir: Path) -> None:
+        """
+        Run the model on the given dataset and write outputs to the specified directory.
+
+        Args:
+            dataset_dir (Path): Path to the input dataset directory.
+            output_dir (Path): Path to the output directory for model results.
+
+        Raises:
+            Exception: If the model run fails for any reason.
+        """
         return NotImplemented
