@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.6.0...v0.7.0) (2026-01-12)
+
+
+### Features
+
+* change model outputs folder ([d079226](https://github.com/LAAC-LSCP/analysis-service-core/commit/d079226192bf03763bd6e716b31ffd0666ec9e2f))
+
 ## [0.6.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.5.0...v0.6.0) (2026-01-12)
 
 
