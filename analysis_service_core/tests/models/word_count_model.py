@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from analysis_service_core.src.config import Config
 from analysis_service_core.src.model import ModelPlugin
-from analysis_service_core.src.redis.pubsub import PubSub
+from analysis_service_core.src.redis.queue import Queue
 
 
 class WordCountModel(ModelPlugin):
@@ -12,13 +12,16 @@ class WordCountModel(ModelPlugin):
     """
 
     def __init__(
-        self, pubsub: PubSub, config: Config, model_output_folder: Optional[Path] = None
+        self,
+        queue: Queue,
+        config: Config,
+        model_output_folder: Optional[Path] = None,
     ) -> None:
         if model_output_folder:
             self.model_output_folder = model_output_folder
 
         super().__init__(
-            pubsub=pubsub,
+            queue=queue,
             config=config,
             skip_moving_files=model_output_folder is None,
         )
