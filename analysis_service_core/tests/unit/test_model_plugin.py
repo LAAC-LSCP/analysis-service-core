@@ -32,31 +32,31 @@ def test_word_count_model_run(
     task_uuid: str,
     use_model_output_folder: bool,
 ):
-    model, _, echolalia_dir, dataset_uid, task_uid = word_count_model_factory(
+    model, dataset_dir, datasets_dir, dataset_uid, task_uid = word_count_model_factory(
         UUID(dataset_uuid), UUID(task_uuid), use_model_output_folder
     )
     model.run()
 
-    outputs = {f for f in echolalia_dir.rglob("*.txt")}
+    outputs = {f for f in (dataset_dir / "outputs").rglob("*.txt")}
     output_file = (
-        echolalia_dir
-        / "outputs"
+        datasets_dir
         / str(dataset_uid)
+        / "outputs"
         / str(task_uid)
         / "child_1"
         / "words_1_1.txt"
     )
     assert outputs == {
         output_file,
-        echolalia_dir
-        / "outputs"
+        datasets_dir
         / str(dataset_uid)
+        / "outputs"
         / str(task_uid)
         / "child_1"
         / "words_1_2.txt",
-        echolalia_dir
-        / "outputs"
+        datasets_dir
         / str(dataset_uid)
+        / "outputs"
         / str(task_uid)
         / "child_2"
         / "words_2_1.txt",
@@ -110,7 +110,7 @@ def word_count_model_factory(
                 model_output_folder=model_output_folder,
             ),
             temp_dataset,
-            temp_echolalia_dir,
+            temp_dataset.parent,
             dataset_uid,
             task_uid,
         )

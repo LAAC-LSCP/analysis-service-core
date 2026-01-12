@@ -2,8 +2,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.model import ModelPlugin
-from analysis_service_core.src.redis.queue import Queue
+from analysis_service_core.src.redis.queue import Queue, QueueName
+from analysis_service_core.testing.mocks.queue import QueueMock
+
+logger = LoggerFactory.get_logger(__name__)
 
 
 class WordCountModel(ModelPlugin):
@@ -16,6 +20,7 @@ class WordCountModel(ModelPlugin):
         queue: Queue,
         config: Config,
         model_output_folder: Optional[Path] = None,
+        mock_completion_queue: bool = True,
     ) -> None:
         if model_output_folder:
             self.model_output_folder = model_output_folder
@@ -25,6 +30,9 @@ class WordCountModel(ModelPlugin):
             config=config,
             skip_moving_files=model_output_folder is None,
         )
+
+        if mock_completion_queue:
+            self._completion_queue = QueueMock(QueueName.COMPLETE_TASK)  # type: ignore
 
     def run_model(self, dataset_dir: Path, output_dir: Path) -> None:
         converted_dir = dataset_dir / "words" / "converted"
@@ -52,5 +60,5 @@ class WordCountModel(ModelPlugin):
                 words = content.split()
                 return len(words)
         except Exception as e:
-            print(f"Error reading file {file}: {e}")
+            logger.error(f"Error reading file {file}: {e}")
             return 0

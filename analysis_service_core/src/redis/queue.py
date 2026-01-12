@@ -1,18 +1,24 @@
 import json
 import os
-from dataclasses import dataclass
 from enum import StrEnum
-from typing import Optional, Type
+from typing import Optional
 
 import redis
 
 from analysis_service_core.src import errors
-from analysis_service_core.src.redis import commands
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import Command
 from analysis_service_core.src.redis.core_types import RedisInfo
 
+logger = LoggerFactory.get_logger(__name__)
+
 
 class QueueName(StrEnum):
+    """
+    Encapsulates the different queues available
+    throughout the system
+    """
+
     COMPLETE_TASK = "complete_task"
     RUN_VTC = "run_vtc"
     RUN_VTC_2 = "run_vtc_2"
@@ -21,21 +27,25 @@ class QueueName(StrEnum):
     RUN_ACOUSTICS = "run_acoustics"
 
 
-@dataclass(frozen=True)
-class QueueDict:
-    name: QueueName
-    command: Type[commands.Command]
-
-
 class Queue:
     """
-    Simple queue adapter class for Redis
+    The `Queue` class implements a queuing system
+
+    In this case it acts as an adapter for Redis calls
+
+    It lets you push and pull to the specified queue
     """
 
     _r: redis.Redis
     _name: QueueName
 
     def __init__(self, name: QueueName):
+        """
+        Initializes a `Queue` object
+
+        Args:
+            name (QueueName): name of the queue
+        """
         self._name = name
         try:
             self._r = redis.Redis(**self._get_redis_host_and_port())
@@ -47,11 +57,11 @@ class Queue:
         redis_port: int = int(os.environ.get("REDIS_PORT", 0))
 
         if redis_host is None:
-            print("'REDIS_HOST' env variable is not set, using 'localhost'")
+            logger.warning("'REDIS_HOST' env variable is not set, using 'localhost'")
             redis_host = "localhost"
 
         if redis_port == 0:
-            print("'REDIS_PORT' env variable is not set, using '6379'")
+            logger.warning("'REDIS_PORT' env variable is not set, using '6379'")
             redis_port = 6379
 
         return {
@@ -63,12 +73,14 @@ class Queue:
         try:
             self._r.lpush(self._name, json.dumps(cmd.to_dict()))
         except Exception as e:
+            logger.error(f"Failed to enqueue cmd {str(cmd)} {self._name}")
             raise errors.QueuePushFailed(str(self._name)) from e
 
     def dequeue(self) -> Optional[dict]:
         try:
             item = self._r.rpop(self._name)
         except Exception as e:
+            logger.error(f"Couldn't pop from queue {self._name}")
             raise errors.QueuePopFailed(str(self._name)) from e
 
         if item is not None:
