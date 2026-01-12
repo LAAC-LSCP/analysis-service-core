@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.4.0...v0.5.0) (2026-01-12)
+
+
+### Features
+
+* add logger ([42aa768](https://github.com/LAAC-LSCP/analysis-service-core/commit/42aa76814ec49e23690b2c8a616b0f0d09390030))
+
 ## [0.4.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.3.1...v0.4.0) (2026-01-12)
 
 
