@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.3.1...v0.4.0) (2026-01-12)
+
+
+### Features
+
+* use queues instead of pubsub ([013b93b](https://github.com/LAAC-LSCP/analysis-service-core/commit/013b93bbc7af87239e3b3ba583596667fd56c854))
+
 ## [0.3.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.3.0...v0.3.1) (2026-01-09)
 
 
