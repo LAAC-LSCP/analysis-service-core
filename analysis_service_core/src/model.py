@@ -146,11 +146,7 @@ class ModelPlugin(ABC):
         return self._get_final_output_dir(run_task)
 
     def _get_final_output_dir(self, run_task: RunTask) -> Path:
-        dataset_uid = self._uid_label_to_uid(run_task.dataset_uid_label)
-
-        return (
-            self.config.echolalia_outputs_dir / str(dataset_uid) / str(run_task.task_id)
-        )
+        return self._get_dataset_dir(run_task) / "outputs" / str(run_task.task_id)
 
     def _uid_label_to_uid(self, uid_label: str) -> UUID:
         return UUID(uid_label.split("_")[-1])

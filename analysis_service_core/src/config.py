@@ -154,7 +154,3 @@ class Config:
     @property
     def echolalia_dir(self) -> Path:
         return self.get("ECHOLALIA_DIR")
-
-    @property
-    def echolalia_outputs_dir(self) -> Path:
-        return self.get("ECHOLALIA_DIR") / "outputs"
