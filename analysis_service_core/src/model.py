@@ -10,7 +10,7 @@ from analysis_service_core.src.redis.queue import Queue, QueueName
 
 
 class ModelPlugin(ABC):
-    # TODO: Think about how partial failure should be represented
+    _QUEUE_POLL_FREQ_S: int = 1
     _queue: Queue
     _completion_queue: Queue
     _config: Config
@@ -47,15 +47,7 @@ class ModelPlugin(ABC):
     def run(self) -> None:
         command: dict = self._wait_for_message()
 
-        try:
-            run_task = RunTask.from_dict(dict_repr=command)
-        except Exception as e:
-            print(
-                f"Could not handle incoming Redis command '{command}': \
-{e}... Stopping model."
-            )
-
-            return
+        run_task = RunTask.from_dict(dict_repr=command)
 
         dataset_dir = self._get_dataset_dir(run_task)
         output_dir = self._get_output_dir(run_task)
@@ -84,7 +76,7 @@ class ModelPlugin(ABC):
         while command is None:
             command = self._queue.dequeue()
 
-            sleep(1)
+            sleep(self._QUEUE_POLL_FREQ_S)
 
         return command
 

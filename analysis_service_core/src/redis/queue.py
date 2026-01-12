@@ -6,6 +6,7 @@ from typing import Optional, Type
 
 import redis
 
+from analysis_service_core.src import errors
 from analysis_service_core.src.redis import commands
 from analysis_service_core.src.redis.commands import Command
 from analysis_service_core.src.redis.core_types import RedisInfo
@@ -36,7 +37,10 @@ class Queue:
 
     def __init__(self, name: QueueName):
         self._name = name
-        self._r = redis.Redis(**self._get_redis_host_and_port())
+        try:
+            self._r = redis.Redis(**self._get_redis_host_and_port())
+        except Exception as e:
+            raise errors.RedisConnectionFailed() from e
 
     def _get_redis_host_and_port(self) -> RedisInfo:
         redis_host: str | None = os.environ.get("REDIS_HOST", None)
@@ -56,10 +60,16 @@ class Queue:
         }
 
     def enqueue(self, cmd: Command) -> None:
-        self._r.lpush(self._name, json.dumps(cmd.to_dict()))
+        try:
+            self._r.lpush(self._name, json.dumps(cmd.to_dict()))
+        except Exception as e:
+            raise errors.QueuePushFailed(str(self._name)) from e
 
     def dequeue(self) -> Optional[dict]:
-        item = self._r.rpop(self._name)
+        try:
+            item = self._r.rpop(self._name)
+        except Exception as e:
+            raise errors.QueuePopFailed(str(self._name)) from e
 
         if item is not None:
             return json.loads(item)  # type: ignore

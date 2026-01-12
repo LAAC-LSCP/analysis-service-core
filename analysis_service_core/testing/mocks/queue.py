@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from analysis_service_core.src import errors
 from analysis_service_core.src.redis.commands import Command
 from analysis_service_core.src.redis.queue import QueueName
 
@@ -13,9 +14,15 @@ class QueueMock:
         self._messages = messages.copy() if messages else []
 
     def enqueue(self, cmd: Command) -> None:
-        self._messages.append(cmd.to_dict())
+        try:
+            self._messages.append(cmd.to_dict())
+        except Exception as e:
+            raise errors.QueuePushFailed(str(self._name)) from e
 
     def dequeue(self) -> Optional[dict]:
         if self._messages:
-            return self._messages.pop(0)
+            try:
+                return self._messages.pop(0)
+            except Exception as e:
+                raise errors.QueuePopFailed(str(self._name)) from e
         return None
