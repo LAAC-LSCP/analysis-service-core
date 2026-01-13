@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.7.0...v0.8.0) (2026-01-13)
+
+
+### Features
+
+* rename operations ([4d78fa8](https://github.com/LAAC-LSCP/analysis-service-core/commit/4d78fa80dcb4c3944be36909e1d33397de079691))
+
 ## [0.7.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.6.0...v0.7.0) (2026-01-12)
 
 
