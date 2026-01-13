@@ -6,12 +6,14 @@ from uuid import UUID
 from analysis_service_core.src import errors
 
 
+# TODO: "Operation" is the same as "model". Want to rename this
+# entire class at a later point to `Model`
 class Operation(StrEnum):
-    RUN_VTC = "run_vtc"
-    RUN_VTC_2 = "run_vtc_2"
-    RUN_ALICE = "run_alice"
-    RUN_W2V2 = "run_w2v2"
-    RUN_ACOUSTICS = "run_acoustics"
+    RUN_VTC = "vtc"
+    RUN_VTC_2 = "vtc_2"
+    RUN_ALICE = "alice"
+    RUN_W2V2 = "w2v2"
+    RUN_ACOUSTICS = "acoustics"
 
 
 class Command(ABC):
