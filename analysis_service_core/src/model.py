@@ -135,7 +135,8 @@ class ModelPlugin(ABC):
         shutil.copytree(self.model_output_folder, final_output_dir, dirs_exist_ok=True)
 
     def _get_dataset_dir(self, run_task: RunTask) -> Path:
-        dataset_uid = self._uid_label_to_uid(run_task.dataset_uid_label)
+        # dataset_uid = self._uid_label_to_uid(run_task.dataset_uid_label)
+        dataset_uid = run_task.dataset_uid_label
 
         return self.config.dataset_dir / str(dataset_uid)
 
@@ -148,8 +149,8 @@ class ModelPlugin(ABC):
     def _get_final_output_dir(self, run_task: RunTask) -> Path:
         return self._get_dataset_dir(run_task) / "outputs" / str(run_task.task_id)
 
-    def _uid_label_to_uid(self, uid_label: str) -> UUID:
-        return UUID(uid_label.split("_")[-1])
+    # def _uid_label_to_uid(self, uid_label: str) -> UUID:
+    #     return UUID(uid_label.split("_")[-1])
 
     @property
     def config(self) -> Config:

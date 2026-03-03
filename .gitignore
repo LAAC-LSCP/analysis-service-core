@@ -1,5 +1,6 @@
 # -- MacOS junk -- #
 .DS_Store
+._*
 
 # -- Created by VSCode -- #
 settings.json
@@ -21,3 +22,6 @@ dist/
 .tox
 .mypy_cache
 .pytest_cache
+
+# -- pycharm -- #
+.idea
