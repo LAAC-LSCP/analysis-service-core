@@ -73,14 +73,14 @@ class Queue:
         try:
             self._r.lpush(self._name, json.dumps(cmd.to_dict()))
         except Exception as e:
-            logger.error(f"Failed to enqueue cmd {str(cmd)} {self._name}")
+            logger.exception(f"Failed to enqueue cmd {str(cmd)} {self._name}")
             raise errors.QueuePushFailed(str(self._name)) from e
 
     def dequeue(self) -> Optional[dict]:
         try:
             item = self._r.rpop(self._name)
         except Exception as e:
-            logger.error(f"Couldn't pop from queue {self._name}")
+            logger.exception(f"Couldn't pop from queue {self._name}")
             raise errors.QueuePopFailed(str(self._name)) from e
 
         if item is not None:

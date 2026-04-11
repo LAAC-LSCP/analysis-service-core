@@ -77,10 +77,8 @@ class ModelPlugin(ABC):
 
     def _validate(self, skip_moving_files: bool) -> None:
         if not skip_moving_files and self.model_output_folder is None:
-            raise ValueError(
-                "If `skip_moving_files == False`, \
-`self.model_output_folder` must be set"
-            )
+            raise ValueError("If `skip_moving_files == False`, \
+`self.model_output_folder` must be set")
 
     def _reset_output_folder(self) -> None:
         if self.model_output_folder is not None:
@@ -105,7 +103,7 @@ class ModelPlugin(ABC):
         try:
             self.run_model(dataset_dir, output_dir)
         except Exception as e:
-            logger.error(f"Problem running model for task {str(command)}: {str(e)}")
+            logger.exception(f"Problem running model for task {str(command)}")
 
             raise errors.RunModelFailed() from e
 

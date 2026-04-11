@@ -59,6 +59,6 @@ class WordCountModel(ModelPlugin):
                 content = f.read()
                 words = content.split()
                 return len(words)
-        except Exception as e:
-            logger.error(f"Error reading file {file}: {e}")
+        except Exception:
+            logger.exception(f"Error reading file {file}")
             return 0
