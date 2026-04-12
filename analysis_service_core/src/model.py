@@ -99,11 +99,11 @@ class ModelPlugin(ABC):
     # For the time being do this awkward passing-in of the task id
     # as we make progress reporting optional. Later refactor
     # to make progress reports a natural of the task lifecycle
-    def report_progress(self, dataset_dir: Path, task_id: UUID) -> None:
+    def report_progress(self, dataset_dir: Path, task_id: UUID) -> float | None:
         if self._effort_model is None:
             logger.warning("Can't report progress without effort model")
 
-            return
+            return None
 
         progress: float
         try:
@@ -111,12 +111,14 @@ class ModelPlugin(ABC):
         except Exception:
             logger.exception("Problem calculating progress")
 
-            return
+            return None
 
         logger.info("Reporting progress to Redis...")
         self._completion_queue.enqueue(
             ReportProgress(task_id=task_id, progress=progress)
         )
+
+        return progress
 
     def run(self) -> None:
         command: dict = self._wait_for_message()
