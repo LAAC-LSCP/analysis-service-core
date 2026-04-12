@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, TypeAlias, TypedDict
+from typing import List, Optional, TypeAlias, TypedDict
 from uuid import UUID
 
 from analysis_service_core.src.filesystem import get_final_output_dir
@@ -60,7 +60,10 @@ class EffortModel(ABC):
         raise NotImplementedError
 
     def _forward_pass_from_igroup(
-        self, dataset_dir: Path, task_id: UUID, igroup: InputGroup
+        self,
+        dataset_dir: Path,
+        igroup: InputGroup,
+        output_dir: Path,
     ) -> ForwardPass:
         """Construct a ForwardPass object from an input group and output directory."""
         return {
@@ -68,14 +71,19 @@ class EffortModel(ABC):
             "output_group": self.ogroup_from_igroup(
                 dataset_dir,
                 igroup,
-                output_dir=get_final_output_dir(dataset_dir, task_id),
+                output_dir=output_dir,
             ),
             "effort": self.effort_from_igroup(igroup),
         }
 
-    def get_progress(self, dataset_dir: Path, task_id: UUID) -> float:
+    def get_progress(
+        self,
+        dataset_dir: Path,
+        task_id: UUID,
+        model_output_folder: Optional[Path] = None,
+    ) -> float:
         """Calculate the progress so far as a fraction of the total effort."""
-        output_dir = get_final_output_dir(dataset_dir, task_id)
+        output_dir = model_output_folder or get_final_output_dir(dataset_dir, task_id)
 
         if not output_dir.exists():
             return 0.0
@@ -89,17 +97,19 @@ class EffortModel(ABC):
             if all(
                 out_file.exists() and out_file.is_file()
                 for out_file in self._forward_pass_from_igroup(
-                    dataset_dir, task_id, igroup
+                    dataset_dir,
+                    igroup,
+                    output_dir,
                 )["output_group"]
             )
         ]
 
         effort_so_far = sum(
-            self._forward_pass_from_igroup(dataset_dir, task_id, igroup)["effort"]
+            self._forward_pass_from_igroup(dataset_dir, igroup, output_dir)["effort"]
             for igroup in processed_igroups
         )
         total_effort = sum(
-            self._forward_pass_from_igroup(dataset_dir, task_id, igroup)["effort"]
+            self._forward_pass_from_igroup(dataset_dir, igroup, output_dir)["effort"]
             for igroup in igroups
         )
 

@@ -107,7 +107,9 @@ class ModelPlugin(ABC):
 
         progress: float
         try:
-            progress = self._effort_model.get_progress(dataset_dir, task_id)
+            progress = self._effort_model.get_progress(
+                dataset_dir, task_id, self._model_output_folder
+            )
         except Exception:
             logger.exception("Problem calculating progress")
 
