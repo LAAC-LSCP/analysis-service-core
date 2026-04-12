@@ -1,6 +1,11 @@
 from uuid import UUID
 
-from analysis_service_core.src.redis.commands import CompleteTask, Operation, RunTask
+from analysis_service_core.src.redis.commands import (
+    CompleteTask,
+    Operation,
+    ReportProgress,
+    RunTask,
+)
 
 
 def test_run_task_to_dict_and_back():
@@ -19,3 +24,12 @@ def test_complete_task_to_dict_and_back():
     )
 
     assert CompleteTask.from_dict(complete_task.to_dict()) == complete_task
+
+
+def test_report_progress_to_dict_and_back():
+    report_progress = ReportProgress(
+        task_id=UUID("22906f72-685a-43b4-9dc8-0c57aa1fafbc"),
+        progress=0.135,
+    )
+
+    assert ReportProgress.from_dict(report_progress.to_dict()) == report_progress

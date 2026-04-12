@@ -30,8 +30,8 @@ class Command(ABC):
     def to_dict(self) -> dict:
         raise NotImplementedError
 
-    @classmethod
-    def from_dict(self, dict_repr: dict) -> "Command":
+    @staticmethod
+    def from_dict(dict_repr: dict) -> "Command":
         raise NotImplementedError
 
 
@@ -53,8 +53,8 @@ class RunTask(Command):
             "operation": str(self.operation),
         }
 
-    @classmethod
-    def from_dict(self, dict_repr: dict) -> "RunTask":
+    @staticmethod
+    def from_dict(dict_repr: dict) -> "RunTask":
         try:
             return RunTask(
                 task_id=UUID(dict_repr["task_id"]),
@@ -79,8 +79,28 @@ class CompleteTask(Command):
             "task_id": str(self.task_id),
         }
 
-    @classmethod
-    def from_dict(self, dict_repr: dict) -> "CompleteTask":
+    @staticmethod
+    def from_dict(dict_repr: dict) -> "CompleteTask":
         return CompleteTask(
             task_id=UUID(dict_repr["task_id"]),
+        )
+
+
+@dataclass
+class ReportProgress(Command):
+    """
+    `ReportProgress` commands encapsulate the action of
+    reporting progress for a task
+    """
+
+    task_id: UUID
+    progress: float
+
+    def to_dict(self) -> dict:
+        return {"task_id": str(self.task_id), "progress": str(self.progress)}
+
+    @staticmethod
+    def from_dict(dict_repr: dict) -> "ReportProgress":
+        return ReportProgress(
+            task_id=UUID(dict_repr["task_id"]), progress=float(dict_repr["progress"])
         )
