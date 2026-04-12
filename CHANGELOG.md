@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.9.0...v0.1.0) (2026-04-12)
+
+
+### Features
+
+* add custom errors ([3253e85](https://github.com/LAAC-LSCP/analysis-service-core/commit/3253e8500c7cdfeb325c865ab2538450f9c6340b))
+* add logger ([42aa768](https://github.com/LAAC-LSCP/analysis-service-core/commit/42aa76814ec49e23690b2c8a616b0f0d09390030))
+* add more models ([c905c9f](https://github.com/LAAC-LSCP/analysis-service-core/commit/c905c9fb78d4cc609abd0d71aeac97207c672bb4))
+* add progress tracking over model output folder ([0531015](https://github.com/LAAC-LSCP/analysis-service-core/commit/0531015553a87a9c226e48899f03b75776e8dbec))
+* add status reporting ([dafcb27](https://github.com/LAAC-LSCP/analysis-service-core/commit/dafcb27cc62a5cc73a6551c5ead7214327267ac7))
+* change model outputs folder ([d079226](https://github.com/LAAC-LSCP/analysis-service-core/commit/d079226192bf03763bd6e716b31ffd0666ec9e2f))
+* MVP ([22d1ede](https://github.com/LAAC-LSCP/analysis-service-core/commit/22d1ede0186ee3f49fb4caa29f93c6a44dc0e02e))
+* rename events to commands ([186ee17](https://github.com/LAAC-LSCP/analysis-service-core/commit/186ee17df5960ee9e09993c7f449289b4f510abc))
+* rename operations ([4d78fa8](https://github.com/LAAC-LSCP/analysis-service-core/commit/4d78fa80dcb4c3944be36909e1d33397de079691))
+* use queues instead of pubsub ([013b93b](https://github.com/LAAC-LSCP/analysis-service-core/commit/013b93bbc7af87239e3b3ba583596667fd56c854))
+
+
+### Bug Fixes
+
+* **pubsub:** fix pubsub mock ([7ecb89c](https://github.com/LAAC-LSCP/analysis-service-core/commit/7ecb89cc42a1ada796f2c26372c709250726d9ea))
+
+
+### Documentation
+
+* add README.md ([7c08f44](https://github.com/LAAC-LSCP/analysis-service-core/commit/7c08f44e4d8d72a87943afa2922a3eb5a454f462))
+
 ## [0.9.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v0.8.0...v0.9.0) (2026-04-12)
 
 
