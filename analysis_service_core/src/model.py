@@ -127,13 +127,15 @@ class ModelPlugin(ABC):
         if self.model_output_folder is None:
             return
 
-        final_output_dir: Path = self._get_final_output_dir(run_task)
+        final_output_dir: Path = self.get_final_output_dir(
+            self._get_dataset_dir(run_task), run_task.task_id
+        )
         final_output_dir.parent.mkdir(parents=True, exist_ok=True)
 
         shutil.copytree(self.model_output_folder, final_output_dir, dirs_exist_ok=True)
 
     def _get_dataset_dir(self, run_task: RunTask) -> Path:
-        dataset_uid = self._uid_label_to_uid(run_task.dataset_uid_label)
+        dataset_uid = self.uid_label_to_uid(run_task.dataset_uid_label)
 
         return self.config.dataset_dir / str(dataset_uid)
 
@@ -141,12 +143,16 @@ class ModelPlugin(ABC):
         if self.model_output_folder is not None:
             return self.model_output_folder
 
-        return self._get_final_output_dir(run_task)
+        return self.get_final_output_dir(
+            self._get_dataset_dir(run_task), run_task.task_id
+        )
 
-    def _get_final_output_dir(self, run_task: RunTask) -> Path:
-        return self._get_dataset_dir(run_task) / "outputs" / str(run_task.task_id)
+    @staticmethod
+    def get_final_output_dir(dataset_dir: Path, task_id: UUID) -> Path:
+        return dataset_dir / "outputs" / str(task_id)
 
-    def _uid_label_to_uid(self, uid_label: str) -> UUID:
+    @staticmethod
+    def uid_label_to_uid(uid_label: str) -> UUID:
         return UUID(uid_label.split("_")[-1])
 
     @property
@@ -180,4 +186,4 @@ class ModelPlugin(ABC):
         Raises:
             Exception: If the model run fails for any reason.
         """
-        return NotImplemented
+        raise NotImplementedError
