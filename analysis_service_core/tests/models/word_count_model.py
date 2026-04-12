@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List, Optional
+from uuid import UUID
 
 from analysis_service_core.src.config import Config
 from analysis_service_core.src.logger import LoggerFactory
@@ -34,7 +35,7 @@ class WordCountModel(ModelPlugin):
         if mock_completion_queue:
             self._completion_queue = QueueMock(QueueName.COMPLETE_TASK)  # type: ignore
 
-    def run_model(self, dataset_dir: Path, output_dir: Path) -> None:
+    def run_model(self, dataset_dir: Path, output_dir: Path, _: UUID) -> None:
         converted_dir = dataset_dir / "words" / "converted"
 
         if not converted_dir.exists():
@@ -59,6 +60,6 @@ class WordCountModel(ModelPlugin):
                 content = f.read()
                 words = content.split()
                 return len(words)
-        except Exception as e:
-            logger.error(f"Error reading file {file}: {e}")
+        except Exception:
+            logger.exception(f"Error reading file {file}")
             return 0

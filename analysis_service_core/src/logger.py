@@ -3,7 +3,7 @@ import logging
 
 class LoggerFactory:
     @staticmethod
-    def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
+    def get_logger(name: str, level: int = logging.ERROR) -> logging.Logger:
         """
         Returns a standardized logger instance for the given name.
 
