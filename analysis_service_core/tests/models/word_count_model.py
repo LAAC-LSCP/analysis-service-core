@@ -5,8 +5,12 @@ from uuid import UUID
 from analysis_service_core.src.config import Config
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.model import ModelPlugin
+from analysis_service_core.src.redis.pubsub import PubSub
 from analysis_service_core.src.redis.queue import Queue, QueueName
 from analysis_service_core.testing.mocks.queue import QueueMock
+from analysis_service_core.tests.models.word_count_effort_model import (
+    WordCountEffortModel,
+)
 
 logger = LoggerFactory.get_logger(__name__)
 
@@ -20,6 +24,8 @@ class WordCountModel(ModelPlugin):
         self,
         queue: Queue,
         config: Config,
+        effort_model: Optional[WordCountEffortModel] = None,
+        pubsub: Optional[PubSub] = None,
         model_output_folder: Optional[Path] = None,
         mock_completion_queue: bool = True,
     ) -> None:
@@ -29,13 +35,15 @@ class WordCountModel(ModelPlugin):
         super().__init__(
             queue=queue,
             config=config,
+            pubsub=pubsub,
+            effort_model=effort_model or WordCountEffortModel(),
             skip_moving_files=model_output_folder is None,
         )
 
         if mock_completion_queue:
             self._completion_queue = QueueMock(QueueName.COMPLETE_TASK)  # type: ignore
 
-    def run_model(self, dataset_dir: Path, output_dir: Path, _: UUID) -> None:
+    def run_model(self, dataset_dir: Path, output_dir: Path, task_id: UUID) -> None:
         converted_dir = dataset_dir / "words" / "converted"
 
         if not converted_dir.exists():
@@ -53,6 +61,8 @@ class WordCountModel(ModelPlugin):
 
             with open(output_file, "w") as f:
                 f.write(f"Word count: {word_count}\n")
+
+            self.report_progress(dataset_dir, task_id)
 
     def _get_word_count(self, file: Path) -> int:
         try:

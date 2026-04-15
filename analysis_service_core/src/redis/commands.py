@@ -8,6 +8,8 @@ from analysis_service_core.src import errors
 
 # TODO: "Operation" is the same as "model". Want to rename this
 # entire class at a later point to `Model`
+# TODO: maybe just remove operation. Seems like it's a relic from
+# pubsub days when all models were listening on the same pubsub
 class Operation(StrEnum):
     RUN_VTC = "vtc"
     RUN_VTC_2 = "vtc_2"

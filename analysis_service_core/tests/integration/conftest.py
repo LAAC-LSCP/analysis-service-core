@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import Protocol, Tuple
+from typing import Optional, Protocol, Tuple
 from uuid import UUID
 
 import pytest
 from pytest import TempPathFactory
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.testing.mocks.pubsub import PubSubMock
 from analysis_service_core.testing.mocks.queue import QueueMock
 from analysis_service_core.tests.conftest import TempDatasetFactory
 from analysis_service_core.tests.models.word_count_model import WordCountModel
@@ -13,8 +14,12 @@ from analysis_service_core.tests.models.word_count_model import WordCountModel
 
 class WordCountModelFactory(Protocol):
     def __call__(
-        self, dataset_uid: UUID, task_uid: UUID, use_model_output_folder: bool = True
-    ) -> Tuple[WordCountModel, Path, Path, UUID, UUID]: ...
+        self,
+        dataset_uid: UUID,
+        task_uid: UUID,
+        pubsub_mock: Optional[PubSubMock] = None,
+        use_model_output_folder: bool = True,
+    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID]: ...
 
 
 @pytest.fixture
@@ -32,8 +37,11 @@ def word_count_model_factory(
     """
 
     def _create_word_count_model(
-        dataset_uid: UUID, task_uid: UUID, use_model_output_folder: bool = True
-    ) -> Tuple[WordCountModel, Path, Path, UUID, UUID]:
+        dataset_uid: UUID,
+        task_uid: UUID,
+        pubsub_mock: Optional[PubSubMock] = None,
+        use_model_output_folder: bool = True,
+    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID]:
         temp_dataset = temp_dataset_factory(dataset_uid=dataset_uid)
         temp_echolalia_dir = tmp_path_factory.mktemp("echolalia_dir")
 
@@ -57,13 +65,16 @@ def word_count_model_factory(
 
         config.set("DATASETS_DIR", temp_dataset.parent)
         config.set("ECHOLALIA_DIR", temp_echolalia_dir)
+        pubsub_mock = pubsub_mock or PubSubMock()
 
         return (
             WordCountModel(
                 queue=queue_mock,  # type: ignore
                 config=config,
                 model_output_folder=model_output_folder,
+                pubsub=pubsub_mock,
             ),
+            pubsub_mock,
             temp_dataset,
             temp_dataset.parent,
             dataset_uid,

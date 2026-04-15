@@ -14,7 +14,7 @@ def test_wc_effort_model(
     dataset_uuid = UUID("51088a18-6c2a-4e65-ae00-8b62d86fe66e")
     task_uuid = UUID("7549b2ed-c0ed-448f-aae9-2b1c87aed255")
 
-    model, dataset_dir, _, _, task_uid = word_count_model_factory(
+    model, _, dataset_dir, _, _, task_uid = word_count_model_factory(
         dataset_uuid, task_uuid, use_model_output_folder=False
     )
 
@@ -32,8 +32,8 @@ def test_wc_effort_model_partial_progress(
     dataset_uuid = UUID("51088a18-6c2a-4e65-ae00-8b62d86fe66e")
     task_uuid = UUID("45d59e06-f163-4dea-b8c5-6e3aa3413009")
 
-    model, dataset_dir, datasets_dir, dataset_uid, task_uid = word_count_model_factory(
-        dataset_uuid, task_uuid, use_model_output_folder=False
+    model, _, dataset_dir, datasets_dir, dataset_uid, task_uid = (
+        word_count_model_factory(dataset_uuid, task_uuid, use_model_output_folder=False)
     )
 
     wc_effort_model = WordCountEffortModel()
