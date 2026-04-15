@@ -15,6 +15,7 @@ from analysis_service_core.src.redis.commands import (
     ReportProgress,
     RunTask,
 )
+from analysis_service_core.src.redis.pubsub import ChannelName, PubSub
 from analysis_service_core.src.redis.queue import Queue, QueueName
 
 logger = LoggerFactory.get_logger(__name__)
@@ -50,6 +51,8 @@ class ModelPlugin(ABC):
     _QUEUE_POLL_FREQ_S: int = 1
     _queue: Queue
     _completion_queue: Queue
+    _progress_queue: Queue
+    _pubsub: PubSub
     _config: Config
     _skip_moving_files: bool
     _model_output_folder: Path | None = None
@@ -59,6 +62,7 @@ class ModelPlugin(ABC):
         self,
         queue: Queue,
         config: Config,
+        pubsub: Optional[PubSub] = None,
         effort_model: Optional[EffortModel] = None,
         skip_moving_files: bool = False,
     ):
@@ -82,6 +86,7 @@ class ModelPlugin(ABC):
         self._queue = queue
         self._completion_queue = Queue(QueueName.COMPLETE_TASK)
         self._progress_queue = Queue(QueueName.PROGRESS)
+        self._pubsub = pubsub or PubSub(subscribe_to=[])
         self._config = config
         self._skip_moving_files = skip_moving_files
         self._effort_model = effort_model
@@ -115,10 +120,16 @@ class ModelPlugin(ABC):
 
             return None
 
-        logger.info("Reporting progress to Redis...")
-        self._completion_queue.enqueue(
-            ReportProgress(task_id=task_id, progress=progress)
-        )
+        logger.info("Reporting progress...")
+        try:
+            self._pubsub.publish(
+                channel_name=ChannelName.UPDATE_STATUS,
+                cmd=ReportProgress(task_id=task_id, progress=progress),
+            )
+        except Exception:
+            logger.exception("Problem reporting progress")
+
+            return None
 
         return progress
 
@@ -150,7 +161,7 @@ class ModelPlugin(ABC):
         if not self._skip_moving_files:
             self._move_files(run_task)
 
-        logger.info("Model ran successfully. Publishing to redis...")
+        logger.info("Model ran successfully. Publishing to broker...")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
 
     def _wait_for_message(self) -> dict:
