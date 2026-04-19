@@ -9,6 +9,14 @@ InputGroup: TypeAlias = List[Path]
 OutputGroup: TypeAlias = List[Path]
 
 
+class ProgressInfo(TypedDict):
+    progress: float
+    partial_progress: float
+    completed_effort: float
+    completed_effort_w_partial_passes: float
+    total_effort: float
+
+
 class ForwardPass(TypedDict):
     """
     Represents a single forward pass, including its input group, output group,
@@ -81,17 +89,17 @@ class EffortModel(ABC):
         dataset_dir: Path,
         task_id: UUID,
         model_output_folder: Optional[Path] = None,
-    ) -> float:
+    ) -> ProgressInfo:
         """Calculate the progress so far as a fraction of the total effort."""
         output_dir = model_output_folder or get_final_output_dir(dataset_dir, task_id)
 
         if not output_dir.exists():
-            return 0.0
+            output_dir.mkdir(parents=True)
 
         igroups = self.find_input_groups(dataset_dir)
         igroups = self._clean_igroups(igroups, output_dir)
 
-        processed_igroups = [
+        completely_passed_igroups = [
             igroup
             for igroup in igroups
             if all(
@@ -104,16 +112,39 @@ class EffortModel(ABC):
             )
         ]
 
-        effort_so_far = sum(
+        partially_passed_igroups = [
+            igroup
+            for igroup in igroups
+            if any(
+                out_file.exists() and out_file.is_file()
+                for out_file in self._forward_pass_from_igroup(
+                    dataset_dir,
+                    igroup,
+                    output_dir,
+                )["output_group"]
+            )
+        ]
+
+        completed_effort_so_far = sum(
             self._forward_pass_from_igroup(dataset_dir, igroup, output_dir)["effort"]
-            for igroup in processed_igroups
+            for igroup in completely_passed_igroups
+        )
+        partial_effort_so_far = sum(
+            self._forward_pass_from_igroup(dataset_dir, igroup, output_dir)["effort"]
+            for igroup in partially_passed_igroups
         )
         total_effort = sum(
             self._forward_pass_from_igroup(dataset_dir, igroup, output_dir)["effort"]
             for igroup in igroups
         )
 
-        return effort_so_far / total_effort
+        return {
+            "progress": completed_effort_so_far / total_effort,
+            "partial_progress": partial_effort_so_far / total_effort,
+            "completed_effort": completed_effort_so_far,
+            "completed_effort_w_partial_passes": partial_effort_so_far,
+            "total_effort": total_effort,
+        }
 
     def _clean_igroups(
         self, igroups: List[InputGroup], output_dir: Path
