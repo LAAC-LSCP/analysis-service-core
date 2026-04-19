@@ -7,7 +7,7 @@ from uuid import UUID
 
 from analysis_service_core.src import errors
 from analysis_service_core.src.config import Config
-from analysis_service_core.src.effort_model import EffortModel
+from analysis_service_core.src.effort_model import EffortModel, ProgressInfo
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import (
@@ -104,15 +104,15 @@ class ModelPlugin(ABC):
     # For the time being do this awkward passing-in of the task id
     # as we make progress reporting optional. Later refactor
     # to make progress reports a natural of the task lifecycle
-    def report_progress(self, dataset_dir: Path, task_id: UUID) -> float | None:
+    def report_progress(self, dataset_dir: Path, task_id: UUID) -> ProgressInfo | None:
         if self._effort_model is None:
             logger.warning("Can't report progress without effort model")
 
             return None
 
-        progress: float
+        progress_info: ProgressInfo
         try:
-            progress = self._effort_model.get_progress(
+            progress_info = self._effort_model.get_progress(
                 dataset_dir, task_id, self._model_output_folder
             )
         except Exception:
@@ -124,14 +124,16 @@ class ModelPlugin(ABC):
         try:
             self._pubsub.publish(
                 channel_name=ChannelName.UPDATE_STATUS,
-                cmd=ReportProgress(task_id=task_id, progress=progress),
+                cmd=ReportProgress.from_dict(
+                    {"task_id": str(task_id), **progress_info}
+                ),
             )
         except Exception:
             logger.exception("Problem reporting progress")
 
             return None
 
-        return progress
+        return progress_info
 
     def run(self) -> None:
         command: dict = self._wait_for_message()

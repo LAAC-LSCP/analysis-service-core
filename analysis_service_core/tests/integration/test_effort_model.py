@@ -19,11 +19,11 @@ def test_wc_effort_model(
     )
 
     wc_effort_model = WordCountEffortModel()
-    assert wc_effort_model.get_progress(dataset_dir, task_uid) == 0.0
+    assert wc_effort_model.get_progress(dataset_dir, task_uid)["progress"] == 0.0
 
     model.run()
 
-    assert wc_effort_model.get_progress(dataset_dir, task_uid) == 1.0
+    assert wc_effort_model.get_progress(dataset_dir, task_uid)["progress"] == 1.0
 
 
 def test_wc_effort_model_partial_progress(
@@ -37,7 +37,7 @@ def test_wc_effort_model_partial_progress(
     )
 
     wc_effort_model = WordCountEffortModel()
-    assert wc_effort_model.get_progress(dataset_dir, task_uid) == 0.0
+    assert wc_effort_model.get_progress(dataset_dir, task_uid)["progress"] == 0.0
 
     model.run()
     # Remove progress for words_1_1.txt, which has effort = 3 (i.e., 3 lines)
@@ -50,7 +50,9 @@ def test_wc_effort_model_partial_progress(
         / "words_1_1.txt"
     ).unlink()
 
-    assert wc_effort_model.get_progress(dataset_dir, task_uid) == (3 + 4) / (3 + 3 + 4)
+    assert wc_effort_model.get_progress(dataset_dir, task_uid)["progress"] == (
+        3 + 4
+    ) / (3 + 3 + 4)
 
     # Remove progress for words_2_1.txt, which has effort = 4 (i.e., 4 lines)
     (
@@ -62,4 +64,6 @@ def test_wc_effort_model_partial_progress(
         / "words_2_1.txt"
     ).unlink()
 
-    assert wc_effort_model.get_progress(dataset_dir, task_uid) == (3) / (3 + 3 + 4)
+    assert wc_effort_model.get_progress(dataset_dir, task_uid)["progress"] == (3) / (
+        3 + 3 + 4
+    )

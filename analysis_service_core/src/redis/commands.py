@@ -96,13 +96,36 @@ class ReportProgress(Command):
     """
 
     task_id: UUID
+    # completed_effort / total_effort
     progress: float
+    # completed_effort_w_partial_passes / total_effort
+    partial_progress: float
+    # effort expended thus far via completed model calls
+    completed_effort: float
+    # effort expended thus far via complete or incomplete model calls
+    completed_effort_w_partial_passes: float
+    # total effort required to finish the task
+    total_effort: float
 
     def to_dict(self) -> dict:
-        return {"task_id": str(self.task_id), "progress": str(self.progress)}
+        return {
+            "task_id": str(self.task_id),
+            "progress": self.progress,
+            "partial_progress": self.partial_progress,
+            "completed_effort": self.completed_effort,
+            "completed_effort_w_partial_passes": self.completed_effort_w_partial_passes,
+            "total_effort": self.total_effort,
+        }
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "ReportProgress":
         return ReportProgress(
-            task_id=UUID(dict_repr["task_id"]), progress=float(dict_repr["progress"])
+            task_id=UUID(dict_repr["task_id"]),
+            progress=float(dict_repr["progress"]),
+            partial_progress=float(dict_repr["partial_progress"]),
+            completed_effort=float(dict_repr["completed_effort"]),
+            completed_effort_w_partial_passes=float(
+                dict_repr["completed_effort_w_partial_passes"]
+            ),
+            total_effort=float(dict_repr["total_effort"]),
         )

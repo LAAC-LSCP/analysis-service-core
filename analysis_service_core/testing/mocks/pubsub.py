@@ -1,13 +1,9 @@
-from typing import Iterable, List, TypedDict
+from typing import Dict, Iterable, List, TypeAlias, TypedDict
 
 from analysis_service_core.src.redis.commands import Command
 from analysis_service_core.src.redis.pubsub import ChannelName, PubSub
 
-
-class Data(TypedDict):
-    task_id: str
-    dataset_uid_label: str
-    operation: str
+Data: TypeAlias = Dict
 
 
 class Message(TypedDict):

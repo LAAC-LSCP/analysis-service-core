@@ -29,7 +29,11 @@ def test_complete_task_to_dict_and_back():
 def test_report_progress_to_dict_and_back():
     report_progress = ReportProgress(
         task_id=UUID("22906f72-685a-43b4-9dc8-0c57aa1fafbc"),
-        progress=0.135,
+        progress=0.10,
+        partial_progress=0.12,
+        completed_effort=10.0,
+        completed_effort_w_partial_passes=12.0,
+        total_effort=100.0,
     )
 
     assert ReportProgress.from_dict(report_progress.to_dict()) == report_progress

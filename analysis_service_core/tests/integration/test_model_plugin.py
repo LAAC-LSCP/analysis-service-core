@@ -70,7 +70,6 @@ def test_word_count_model_run(
     messages = list(map(pubsub_mock.get_message, range(len(progresses))))
     data = list(map(pubsub_mock.get_data_from_message, messages))
 
-    assert data == [
-        {"task_id": str(task_uuid), "progress": str(progress)}
-        for progress in progresses
+    assert [{"task_id": d["task_id"], "progress": d["progress"]} for d in data] == [
+        {"task_id": str(task_uuid), "progress": progress} for progress in progresses
     ]
