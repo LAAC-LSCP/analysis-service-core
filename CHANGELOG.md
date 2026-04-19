@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.1.0...v1.2.0) (2026-04-19)
+
+
+### Features
+
+* expand progress api ([8a5e600](https://github.com/LAAC-LSCP/analysis-service-core/commit/8a5e600bd8bd3a12bc2943db6d989f79df490d1d))
+
 ## [1.1.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.0.0...v1.1.0) (2026-04-15)
 
 
