@@ -1,10 +1,3 @@
-class RunModelFailed(Exception):
-    """Raised when a model fails to run."""
-
-    def __init__(self):
-        super().__init__("Failed to run model")
-
-
 class RedisConnectionFailed(Exception):
     """Raised when a Redis connection cannot be made"""
 

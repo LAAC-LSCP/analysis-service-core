@@ -5,9 +5,13 @@ from time import sleep
 from typing import Optional
 from uuid import UUID
 
-from analysis_service_core.src import errors
 from analysis_service_core.src.config import Config
-from analysis_service_core.src.effort_model import EffortModel, ProgressInfo
+from analysis_service_core.src.effort_model import (
+    EffortModel,
+    InputGroup,
+    PassOutputGroup,
+    ProgressInfo,
+)
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import (
@@ -23,28 +27,34 @@ logger = LoggerFactory.get_logger(__name__)
 
 class ModelPlugin(ABC):
     """
-    Abstract base class for machine learning model plugins in the analysis service.
+    Abstract base class for model plugins in the analysis service.
 
-    This class defines the interface and common logic for running models, handling
-    input/output directories,
-    processing tasks from a queue, and publishing results. Subclasses must implement
-    the `run_model` method to define model-specific execution logic.
+    Handles the full lifecycle of a task: polling a queue for incoming work,
+    iterating over input groups, running the model and postprocessing per group,
+    optionally moving outputs to a final location, and publishing a completion signal.
 
-    Features:
-        - Polls a queue for incoming tasks and processes them.
-        - Handles dataset and output directory management.
-        - Publishes completion messages to a completion queue.
-        - Provides hooks for file movement and output folder management.
-        - Uses a preconfigured logger for status and error reporting.
+    Progress is tracked via an `EffortModel`, which defines how input groups map to
+    pass outputs (pogroup) and final outputs (ogroup), and how effort is distributed
+    across groups.
 
-    Subclasses should implement:
-        - `run_model(dataset_dir: Path, output_dir: Path)`: The core model execution
-            logic.
+    Subclasses must implement:
+        - `run_model(dataset_dir, output_dir, igroup)`: Execute the model on a single
+            input group and write pass outputs to `output_dir`.
+        - `postprocess(dataset_dir, output_dir, pogroup)`: Transform pass outputs into
+            final outputs.
 
     Example:
         class MyModel(ModelPlugin):
-            def run_model(self, dataset_dir: Path, output_dir: Path) -> None:
-                # Model-specific logic here
+            def run_model(
+                self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
+            ) -> None:
+                # subprocess call or model inference here
+                pass
+
+            def postprocess(
+                self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+            ) -> None:
+                # move/rename/filter pass outputs into final form
                 pass
     """
 
@@ -55,8 +65,9 @@ class ModelPlugin(ABC):
     _pubsub: PubSub
     _config: Config
     _skip_moving_files: bool
-    _model_output_folder: Path | None = None
     _effort_model: EffortModel
+    _model_output_folder: Path | None = None
+    _task_id: UUID | None = None
 
     def __init__(
         self,
@@ -82,7 +93,7 @@ class ModelPlugin(ABC):
         self._validate(skip_moving_files)
         self._reset_output_folder()
 
-        logger.info("Starting model...")
+        logger.info(f"Initialising {self.__class__.__name__}...")
         self._queue = queue
         self._completion_queue = Queue(QueueName.COMPLETE_TASK)
         self._progress_queue = Queue(QueueName.PROGRESS)
@@ -101,21 +112,104 @@ class ModelPlugin(ABC):
             shutil.rmtree(self.model_output_folder)
             self.model_output_folder.mkdir(parents=True)
 
-    # For the time being do this awkward passing-in of the task id
-    # as we make progress reporting optional. Later refactor
-    # to make progress reports a natural of the task lifecycle
-    def report_progress(self, dataset_dir: Path, task_id: UUID) -> ProgressInfo | None:
+    def run(self) -> None:
+        """
+        Block until a task is received from the queue, then execute the full task
+        lifecycle:
+
+        1. Dequeue a task and resolve the dataset and output directories.
+        2. Discover input groups via the effort model.
+        3. For each input group: run the model, verify pass outputs, postprocess,
+           and report progress.
+        4. Optionally move outputs to the final output location.
+        5. Publish a completion signal.
+
+        Errors in individual igroup runs are logged and skipped; the task continues
+        with remaining groups.
+        """
+        command: dict = self._wait_for_message()
+
+        run_task = RunTask.from_dict(dict_repr=command)
+        self._task_id = run_task.task_id
+
+        dataset_dir = get_dataset_dir(
+            self.config.dataset_dir, run_task.dataset_uid_label
+        )
+
+        if not dataset_dir.exists():
+            logger.error(
+                f"Dataset directory not found: '{dataset_dir}'. "
+                f"Cannot run task {run_task.task_id!s}."
+            )
+            return
+
+        igroups = self._effort_model.find_sorted_igroups(dataset_dir)
+        logger.info(f"Starting task {run_task.task_id!s} on dataset \
+'{run_task.dataset_uid_label}' " f"— {len(igroups)} igroup(s) found.")
+
+        output_dir = self._get_output_dir(run_task)
+        for idx, igroup in enumerate(igroups):
+            logger.info(f"[{idx + 1}/{len(igroups)}] Processing igroup: {igroup}")
+            try:
+                self._run_on_igroup(dataset_dir, output_dir, igroup)
+            except Exception:
+                logger.exception(
+                    f"[{idx + 1}/{len(igroups)}] Failed to process igroup: {igroup}"
+                )
+                continue
+
+        if not self._skip_moving_files:
+            self._move_files(run_task)
+
+        logger.info(
+            f"Task {run_task.task_id!s} completed successfully. Publishing completion \
+signal."
+        )
+        self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+
+    def _run_on_igroup(
+        self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
+    ) -> None:
+        self.run_model(dataset_dir, output_dir, igroup)
+
+        pogroup = self._effort_model.pogroup_from_igroup(
+            dataset_dir, output_dir, igroup
+        )
+
+        missing = [f for f in pogroup if not f.exists()]
+        if missing:
+            logger.warning(
+                f"{len(missing)} expected pass output file(s) missing after model run: \
+{missing}"
+            )
+
+        self.postprocess(dataset_dir, output_dir, pogroup)
+        self._report_progress(dataset_dir)
+
+    def _report_progress(self, dataset_dir: Path) -> None:
+        task_id = self._task_id
+
+        if task_id is None:
+            return
+
         progress_info: ProgressInfo
         try:
             progress_info = self._effort_model.get_progress(
                 dataset_dir, task_id, self._model_output_folder
             )
         except Exception:
-            logger.exception("Problem calculating progress")
+            logger.exception(
+                f"Failed to calculate progress for task {task_id!s} on dataset \
+{dataset_dir}"
+            )
+            return
 
-            return None
-
-        logger.info("Reporting progress...")
+        logger.info(
+            f"Progress for task {task_id!s}: "
+            f"{progress_info['completed_passes']}/{progress_info['total_passes']} \
+passes complete "
+            f"({progress_info['completed_progress']:.1%})"
+        )
         try:
             self._pubsub.publish(
                 channel_name=ChannelName.UPDATE_STATUS,
@@ -124,42 +218,7 @@ class ModelPlugin(ABC):
                 ),
             )
         except Exception:
-            logger.exception("Problem reporting progress")
-
-            return None
-
-        return progress_info
-
-    def run(self) -> None:
-        command: dict = self._wait_for_message()
-
-        run_task = RunTask.from_dict(dict_repr=command)
-
-        dataset_dir = get_dataset_dir(
-            self.config.dataset_dir, run_task.dataset_uid_label
-        )
-        output_dir = self._get_output_dir(run_task)
-        task_id = run_task.task_id
-
-        if not dataset_dir.exists():
-            logger.error(
-                f"Dataset at '{str(dataset_dir)}' not found. Cannot run model."
-            )
-
-            return
-
-        try:
-            self.run_model(dataset_dir, output_dir, task_id)
-        except Exception as e:
-            logger.exception(f"Problem running model for task {str(command)}")
-
-            raise errors.RunModelFailed() from e
-
-        if not self._skip_moving_files:
-            self._move_files(run_task)
-
-        logger.info("Model ran successfully. Publishing to broker...")
-        self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+            logger.exception(f"Failed to publish progress for task {task_id!s}")
 
     def _wait_for_message(self) -> dict:
         command: dict | None = None
@@ -212,15 +271,38 @@ class ModelPlugin(ABC):
         self._model_output_folder = value
 
     @abstractmethod
-    def run_model(self, dataset_dir: Path, output_dir: Path, task_id: UUID) -> None:
+    def run_model(
+        self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
+    ) -> None:
         """
-        Run the model on the given dataset and write outputs to the specified directory.
+        Execute the model on an input group and write pass outputs to `output_dir`.
 
         Args:
-            dataset_dir (Path): Path to the input dataset directory.
-            output_dir (Path): Path to the output directory for model results.
+            dataset_dir (Path): Root directory of the dataset, useful for resolving
+                paths relative to the dataset structure.
+            output_dir (Path): Directory to write pass outputs (pogroup) to.
+            igroup (InputGroup): The input files to process in this forward pass.
 
         Raises:
             Exception: If the model run fails for any reason.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def postprocess(
+        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+    ) -> None:
+        """
+        Transform pass outputs into final outputs for a single input group.
+
+        Called after `run_model` for each igroup. Use this to move, rename, filter,
+        or reformat the raw pass outputs written by `run_model`.
+
+        Args:
+            dataset_dir (Path): Root directory of the dataset.
+            output_dir (Path): Directory containing the pass outputs written by
+                `run_model`.
+            pogroup (PassOutputGroup): The pass output files produced by `run_model`
+                for this igroup.
         """
         raise NotImplementedError

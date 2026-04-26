@@ -1,8 +1,9 @@
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
-from uuid import UUID
+from typing import Optional
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.src.effort_model import InputGroup, PassOutputGroup
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.model import ModelPlugin
 from analysis_service_core.src.redis.pubsub import PubSub
@@ -43,17 +44,13 @@ class WordCountModel(ModelPlugin):
         if mock_completion_queue:
             self._completion_queue = QueueMock(QueueName.COMPLETE_TASK)  # type: ignore
 
-    def run_model(self, dataset_dir: Path, output_dir: Path, task_id: UUID) -> None:
+    def run_model(
+        self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
+    ) -> None:
         converted_dir = dataset_dir / "words" / "converted"
 
-        if not converted_dir.exists():
-            raise FileNotFoundError(f"Directory {converted_dir} does not exist")
-
-        txt_files: List[Path] = list(converted_dir.rglob("*.txt"))
-
-        for txt_file in txt_files:
+        for txt_file in igroup:
             word_count = self._get_word_count(txt_file)
-
             rel_path = txt_file.relative_to(converted_dir)
 
             output_file = output_dir / rel_path
@@ -62,7 +59,16 @@ class WordCountModel(ModelPlugin):
             with open(output_file, "w") as f:
                 f.write(f"Word count: {word_count}\n")
 
-            self.report_progress(dataset_dir, task_id)
+            date_file = output_file.with_name("date.txt")
+            with open(date_file, "w") as f:
+                f.write(datetime.now(timezone.utc).isoformat() + "\n")
+
+    def postprocess(
+        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+    ) -> None:
+        for file in pogroup:
+            if file.name == "date.txt":
+                file.unlink(missing_ok=True)
 
     def _get_word_count(self, file: Path) -> int:
         try:
