@@ -56,14 +56,14 @@ class ModelPlugin(ABC):
     _config: Config
     _skip_moving_files: bool
     _model_output_folder: Path | None = None
-    _effort_model: EffortModel | None
+    _effort_model: EffortModel
 
     def __init__(
         self,
         queue: Queue,
         config: Config,
+        effort_model: EffortModel,
         pubsub: Optional[PubSub] = None,
-        effort_model: Optional[EffortModel] = None,
         skip_moving_files: bool = False,
     ):
         """
@@ -105,11 +105,6 @@ class ModelPlugin(ABC):
     # as we make progress reporting optional. Later refactor
     # to make progress reports a natural of the task lifecycle
     def report_progress(self, dataset_dir: Path, task_id: UUID) -> ProgressInfo | None:
-        if self._effort_model is None:
-            logger.warning("Can't report progress without effort model")
-
-            return None
-
         progress_info: ProgressInfo
         try:
             progress_info = self._effort_model.get_progress(

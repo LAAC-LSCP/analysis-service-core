@@ -24,7 +24,7 @@ class WordCountModel(ModelPlugin):
         self,
         queue: Queue,
         config: Config,
-        effort_model: Optional[WordCountEffortModel] = None,
+        effort_model: WordCountEffortModel,
         pubsub: Optional[PubSub] = None,
         model_output_folder: Optional[Path] = None,
         mock_completion_queue: bool = True,
@@ -36,7 +36,7 @@ class WordCountModel(ModelPlugin):
             queue=queue,
             config=config,
             pubsub=pubsub,
-            effort_model=effort_model or WordCountEffortModel(),
+            effort_model=effort_model,
             skip_moving_files=model_output_folder is None,
         )
 

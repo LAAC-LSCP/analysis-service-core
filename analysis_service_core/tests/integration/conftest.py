@@ -9,6 +9,9 @@ from analysis_service_core.src.config import Config
 from analysis_service_core.testing.mocks.pubsub import PubSubMock
 from analysis_service_core.testing.mocks.queue import QueueMock
 from analysis_service_core.tests.conftest import TempDatasetFactory
+from analysis_service_core.tests.models.word_count_effort_model import (
+    WordCountEffortModel,
+)
 from analysis_service_core.tests.models.word_count_model import WordCountModel
 
 
@@ -71,6 +74,7 @@ def word_count_model_factory(
             WordCountModel(
                 queue=queue_mock,  # type: ignore
                 config=config,
+                effort_model=WordCountEffortModel(),
                 model_output_folder=model_output_folder,
                 pubsub=pubsub_mock,
             ),
