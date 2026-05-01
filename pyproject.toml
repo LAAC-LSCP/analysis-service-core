@@ -40,6 +40,14 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 src_paths = ["analysis_service_core"]
+
+
+[tool.pydocstyle]
+convention = "google"
+match = ".*\\.py"
+match-dir = "(?!tests).*"
+
+
 [dependency-groups]
 dev = [
     "pytest (>=9.0.2,<10.0.0)"
