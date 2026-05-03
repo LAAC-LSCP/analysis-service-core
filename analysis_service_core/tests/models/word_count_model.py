@@ -33,7 +33,11 @@ class WordCountModel(ModelPlugin):
                 f.write(datetime.now(timezone.utc).isoformat() + "\n")
 
     def postprocess(
-        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+        self,
+        dataset_dir: Path,
+        output_dir: Path,
+        pogroup: PassOutputGroup,
+        igroup: InputGroup,
     ) -> None:
         for file in pogroup:
             if file.name == "date.txt":

@@ -78,12 +78,14 @@ class Config:
         for env_var in env_vars:
             self._env_vars.add(self._load_env_var(env_var))
 
-    def _load_env_var(self, env_var: EnvVar) -> ValuedEnvVar:
-        env_value = os.getenv(env_var.key)
+    def _get_raw_value(self, key: str) -> str:
+        value = os.getenv(key)
+        if value is None:
+            raise ValueError(f"Environment variable '{key}' not found")
+        return value
 
-        if env_value is None:
-            raise ValueError(f"Environment variable \
-'{env_var.key}' not found")
+    def _load_env_var(self, env_var: EnvVar) -> ValuedEnvVar:
+        env_value = self._get_raw_value(env_var.key)
 
         var_type = env_var.type
 

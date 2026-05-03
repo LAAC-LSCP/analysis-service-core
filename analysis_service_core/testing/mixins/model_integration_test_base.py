@@ -80,13 +80,18 @@ class ModelIntegrationTestBase:
 
         assert pofiles == expected_pofiles
 
-        for pogroup in [
-            self.effort_model_mock.pogroup_from_igroup(
-                self.temp_inputs, self.temp_pass_outputs, igroup
+        for pogroup, igroup in [
+            (
+                self.effort_model_mock.pogroup_from_igroup(
+                    self.temp_inputs, self.temp_pass_outputs, igroup
+                ),
+                igroup,
             )
             for igroup in input_igroups
         ]:
-            self.model_mock.postprocess(self.temp_inputs, self.temp_outputs, pogroup)
+            self.model_mock.postprocess(
+                self.temp_inputs, self.temp_outputs, pogroup, igroup
+            )
 
         ofiles: Set[Path] = {
             f.relative_to(self.temp_outputs)
