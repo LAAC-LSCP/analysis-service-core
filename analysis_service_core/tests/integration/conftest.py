@@ -6,6 +6,7 @@ import pytest
 from pytest import TempPathFactory
 
 from analysis_service_core.src.config import Config
+from analysis_service_core.src.redis.queue import QueueName
 from analysis_service_core.testing.mocks.pubsub import PubSubMock
 from analysis_service_core.testing.mocks.queue import QueueMock
 from analysis_service_core.tests.conftest import TempDatasetFactory
@@ -75,8 +76,10 @@ def word_count_model_factory(
                 queue=queue_mock,  # type: ignore
                 config=config,
                 effort_model=WordCountEffortModel(),
-                model_output_folder=model_output_folder,
                 pubsub=pubsub_mock,
+                model_output_folder=model_output_folder,
+                _completion_queue=QueueMock(name=QueueName.COMPLETE_TASK),
+                _progress_queue=QueueMock(name=QueueName.PROGRESS),
             ),
             pubsub_mock,
             temp_dataset,

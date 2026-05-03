@@ -65,7 +65,6 @@ class ModelPlugin(ABC):
     _progress_queue: Queue
     _pubsub: PubSub
     _config: Config
-    _skip_moving_files: bool
     _effort_model: EffortModel
     _model_output_folder: Path | None = None
     _task_id: UUID | None = None
@@ -76,29 +75,20 @@ class ModelPlugin(ABC):
         config: Config,
         effort_model: EffortModel,
         pubsub: Optional[PubSub] = None,
-        skip_moving_files: bool = False,
+        model_output_folder: Optional[Path] = None,
+        _completion_queue: Optional[Queue] = None,
+        _progress_queue: Optional[Queue] = None,
     ):
-        """Initialize the model plugin.
-
-        Raises:
-            ValueError: If skip_moving_files is False and model_output_folder not set.
-        """
-        self._validate(skip_moving_files)
-        self._reset_output_folder()
-
+        """Initialize the model plugin."""
         logger.info(f"Initialising {self.__class__.__name__}...")
         self._queue = queue
-        self._completion_queue = Queue(QueueName.COMPLETE_TASK)
-        self._progress_queue = Queue(QueueName.PROGRESS)
+        self._model_output_folder = model_output_folder
+        self._reset_output_folder()
+        self._completion_queue = _completion_queue or Queue(QueueName.COMPLETE_TASK)
+        self._progress_queue = _progress_queue or Queue(QueueName.PROGRESS)
         self._pubsub = pubsub or PubSub(subscribe_to=[])
         self._config = config
-        self._skip_moving_files = skip_moving_files
         self._effort_model = effort_model
-
-    def _validate(self, skip_moving_files: bool) -> None:
-        if not skip_moving_files and self.model_output_folder is None:
-            raise ValueError("If `skip_moving_files == False`, \
-`self.model_output_folder` must be set")
 
     def _reset_output_folder(self) -> None:
         if self.model_output_folder is not None:
@@ -149,7 +139,7 @@ class ModelPlugin(ABC):
                 )
                 continue
 
-        if not self._skip_moving_files:
+        if self.model_output_folder is not None:
             self._move_files(run_task)
 
         logger.info(
