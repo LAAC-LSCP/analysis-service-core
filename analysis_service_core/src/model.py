@@ -165,7 +165,7 @@ signal."
 {missing}"
             )
 
-        self.postprocess(dataset_dir, output_dir, pogroup)
+        self.postprocess(dataset_dir, output_dir, pogroup, igroup)
         self._report_progress(dataset_dir)
 
     def _report_progress(self, dataset_dir: Path) -> None:
@@ -267,7 +267,11 @@ passes complete "
 
     @abstractmethod
     def postprocess(
-        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+        self,
+        dataset_dir: Path,
+        output_dir: Path,
+        pogroup: PassOutputGroup,
+        igroup: InputGroup,
     ) -> None:
         """Transform pass outputs into final outputs for a single input group.
 
@@ -280,5 +284,6 @@ passes complete "
                 `run_model`.
             pogroup (PassOutputGroup): The pass output files produced by `run_model`
                 for this igroup.
+            igroup (InputGroup): input group that generated the pogroup.
         """
         raise NotImplementedError

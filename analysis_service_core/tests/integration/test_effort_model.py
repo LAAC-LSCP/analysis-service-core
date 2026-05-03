@@ -67,7 +67,7 @@ def test_wc_effort_model_step_by_step(
         for f in pogroup:
             assert f.exists(), f"Expected pass output {f} to exist after run_model"
 
-        model.postprocess(dataset_dir, output_dir, pogroup)
+        model.postprocess(dataset_dir, output_dir, pogroup, igroup)
 
         progress = wc_effort_model.get_progress(dataset_dir, task_uid)
         assert progress["completed_progress"] == pytest.approx(
