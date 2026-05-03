@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.4.0...v1.5.0) (2026-05-03)
+
+
+### Features
+
+* **logger:** add task and dataset to model logger ([cf826f4](https://github.com/LAAC-LSCP/analysis-service-core/commit/cf826f4b07a5943d6181821d4c8f63522d749c43))
+
 ## [1.4.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.3.0...v1.4.0) (2026-05-03)
 
 
