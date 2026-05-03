@@ -15,7 +15,7 @@ from analysis_service_core.src.effort_model import (
     ProgressInfo,
 )
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
-from analysis_service_core.src.logger import LoggerFactory
+from analysis_service_core.src.logger import Logger, LoggerFactory
 from analysis_service_core.src.redis.commands import (
     CompleteTask,
     ReportProgress,
@@ -24,7 +24,7 @@ from analysis_service_core.src.redis.commands import (
 from analysis_service_core.src.redis.pubsub import ChannelName, PubSub
 from analysis_service_core.src.redis.queue import Queue, QueueName
 
-logger = LoggerFactory.get_logger(__name__)
+_logger = LoggerFactory.get_logger(__name__)
 
 
 class ModelPlugin(ABC):
@@ -66,6 +66,7 @@ class ModelPlugin(ABC):
     _pubsub: PubSub
     _config: Config
     _effort_model: EffortModel
+    _logger: Logger
     _model_output_folder: Path | None = None
     _task_id: UUID | None = None
 
@@ -80,7 +81,8 @@ class ModelPlugin(ABC):
         _progress_queue: Optional[Queue] = None,
     ):
         """Initialize the model plugin."""
-        logger.info(f"Initialising {self.__class__.__name__}...")
+        self._logger = _logger
+        self._logger.info(f"Initialising {self.__class__.__name__}...")
         self._queue = queue
         self._model_output_folder = model_output_folder
         self._reset_output_folder()
@@ -112,29 +114,28 @@ class ModelPlugin(ABC):
 
         run_task = RunTask.from_dict(dict_repr=command)
         self._task_id = run_task.task_id
+        self._logger = _logger.with_task(run_task.task_id).with_dataset(
+            run_task.dataset_uid_label
+        )
 
         dataset_dir = get_dataset_dir(
             self.config.dataset_dir, run_task.dataset_uid_label
         )
 
         if not dataset_dir.exists():
-            logger.error(
-                f"Dataset directory not found: '{dataset_dir}'. "
-                f"Cannot run task {run_task.task_id!s}."
-            )
+            self._logger.error(f"Dataset directory not found: '{dataset_dir}'.")
             return
 
         igroups = self._effort_model.find_sorted_igroups(dataset_dir)
-        logger.info(f"Starting task {run_task.task_id!s} on dataset \
-'{run_task.dataset_uid_label}' " f"— {len(igroups)} igroup(s) found.")
+        self._logger.info(f"Starting — {len(igroups)} igroup(s) found.")
 
         output_dir = self._get_output_dir(run_task)
         for idx, igroup in enumerate(igroups):
-            logger.info(f"[{idx + 1}/{len(igroups)}] Processing igroup: {igroup}")
+            self._logger.info(f"[{idx + 1}/{len(igroups)}] Processing igroup: {igroup}")
             try:
                 self._run_on_igroup(dataset_dir, output_dir, igroup)
             except Exception:
-                logger.exception(
+                self._logger.exception(
                     f"[{idx + 1}/{len(igroups)}] Failed to process igroup: {igroup}"
                 )
                 continue
@@ -142,10 +143,7 @@ class ModelPlugin(ABC):
         if self.model_output_folder is not None:
             self._move_files(run_task)
 
-        logger.info(
-            f"Task {run_task.task_id!s} completed successfully. Publishing completion \
-signal."
-        )
+        self._logger.info("Completed successfully. Publishing completion signal.")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
 
     def _run_on_igroup(
@@ -160,7 +158,7 @@ signal."
 
         missing = [f for f in pogroup if not f.exists()]
         if missing:
-            logger.warning(
+            self._logger.warning(
                 f"{len(missing)} expected pass output file(s) missing after model run: \
 {missing}"
             )
@@ -180,17 +178,16 @@ signal."
                 dataset_dir, task_id, self._model_output_folder
             )
         except Exception:
-            logger.exception(
+            self._logger.exception(
                 f"Failed to calculate progress for task {task_id!s} on dataset \
 {dataset_dir}"
             )
             return
 
-        logger.info(
-            f"Progress for task {task_id!s}: "
-            f"{progress_info['completed_passes']}/{progress_info['total_passes']} \
-passes complete "
-            f"({progress_info['completed_progress']:.1%})"
+        self._logger.info(
+            f"Progress: "
+            f"{progress_info['completed_passes']}/{progress_info['total_passes']} "
+            f"passes complete ({progress_info['completed_progress']:.1%})"
         )
         try:
             self._pubsub.publish(
@@ -200,7 +197,7 @@ passes complete "
                 ),
             )
         except Exception:
-            logger.exception(f"Failed to publish progress for task {task_id!s}")
+            self._logger.exception("Failed to publish progress.")
 
     def _wait_for_message(self) -> dict:
         """Block until a message is dequeued and return it."""
