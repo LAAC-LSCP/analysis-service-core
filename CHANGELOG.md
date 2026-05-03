@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.3.0...v1.4.0) (2026-05-03)
+
+
+### Features
+
+* **model:** pass in input groups in output group-related functions ([9e33b39](https://github.com/LAAC-LSCP/analysis-service-core/commit/9e33b396a16b9486debbd77c77f6d3f5d6c162f0))
+
 ## [1.3.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.2.0...v1.3.0) (2026-05-03)
 
 
