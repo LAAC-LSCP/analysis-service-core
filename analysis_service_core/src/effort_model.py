@@ -59,7 +59,11 @@ class EffortModel(ABC):
 
     @abstractmethod
     def ogroup_from_pogroup(
-        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+        self,
+        dataset_dir: Path,
+        output_dir: Path,
+        pogroup: PassOutputGroup,
+        igroup: InputGroup,
     ) -> OutputGroup:
         """Return the final output group derived from a pass output group."""
         raise NotImplementedError
@@ -76,7 +80,10 @@ class EffortModel(ABC):
         return sorted([sorted(igroup) for igroup in self.find_igroups(dataset_dir)])
 
     def effort_ogroup_from_pogroup(
-        self, pogroup: PassOutputGroup, ogroup: OutputGroup
+        self,
+        pogroup: PassOutputGroup,
+        ogroup: OutputGroup,
+        igroup: InputGroup,
     ) -> float:
         """Return the effort of post-processing a pass output group. Defaults to 0."""
         return 0.0
@@ -116,6 +123,7 @@ class EffortModel(ABC):
             + self.effort_ogroup_from_pogroup(
                 fp["pass_output_group"],
                 [f for f in fp["output_group"] if f.exists() and f.is_file()],
+                igroup,
             )
             for igroup, fp in forward_passes
             if any(f.exists() and f.is_file() for f in fp["pass_output_group"])
@@ -147,10 +155,10 @@ class EffortModel(ABC):
     ) -> ForwardPass:
         """Construct a ForwardPass object from an input group and output directory."""
         pogroup = self.pogroup_from_igroup(dataset_dir, output_dir, igroup)
-        ogroup = self.ogroup_from_pogroup(dataset_dir, output_dir, pogroup)
+        ogroup = self.ogroup_from_pogroup(dataset_dir, output_dir, pogroup, igroup)
         effort = self.effort_pogroup_from_igroup(
             igroup, pogroup
-        ) + self.effort_ogroup_from_pogroup(pogroup, ogroup)
+        ) + self.effort_ogroup_from_pogroup(pogroup, ogroup, igroup)
 
         return {
             "input_group": igroup,

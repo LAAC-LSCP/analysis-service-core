@@ -28,12 +28,19 @@ class WordCountEffortModel(EffortModel):
         return pogroup
 
     def ogroup_from_pogroup(
-        self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
+        self,
+        dataset_dir: Path,
+        output_dir: Path,
+        pogroup: PassOutputGroup,
+        igroup: InputGroup,
     ) -> OutputGroup:
         return [f for f in pogroup if f.name != "date.txt"]
 
     def effort_ogroup_from_pogroup(
-        self, pogroup: PassOutputGroup, ogroup: OutputGroup
+        self,
+        pogroup: PassOutputGroup,
+        ogroup: OutputGroup,
+        igroup: InputGroup,
     ) -> float:
         return 0.5 * len(ogroup)
 
