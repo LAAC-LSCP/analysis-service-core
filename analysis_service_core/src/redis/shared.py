@@ -1,3 +1,5 @@
+"""Shared helpers for Redis-related app logic."""
+
 import os
 
 from analysis_service_core.src.logger import LoggerFactory
@@ -7,6 +9,11 @@ logger = LoggerFactory.get_logger(__name__)
 
 
 def get_redis_host_and_port() -> RedisInfo:
+    """Get a dictionary with the Redis host and port.
+
+    The host and port are read from environment variables REDIS_HOST and REDIS_PORT
+    respectively.
+    """
     redis_host: str | None = os.environ.get("REDIS_HOST", None)
     redis_port: int = int(os.environ.get("REDIS_PORT", 0))
 

@@ -1,3 +1,5 @@
+"""Effort model abstraction for tracking task progress and cost for forward passes."""
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional, TypeAlias, TypedDict
@@ -6,11 +8,15 @@ from uuid import UUID
 from analysis_service_core.src.filesystem import get_final_output_dir
 
 InputGroup: TypeAlias = List[Path]
+# Intermediate outputs of input groups—outputs of subprocess calls
 PassOutputGroup: TypeAlias = List[Path]
+# Final outputs, after post-processing pass output groups in the output folder
 OutputGroup: TypeAlias = List[Path]
 
 
 class ProgressInfo(TypedDict):
+    """Snapshot of task progress metrics at a given point in time."""
+
     completed_progress: float
     completed_pass_effort: float
     partial_pass_progress: float
@@ -21,10 +27,7 @@ class ProgressInfo(TypedDict):
 
 
 class ForwardPass(TypedDict):
-    """
-    Represents a single forward pass, including its input group, output group,
-    and associated "effort".
-    """
+    """A single forward pass with its input/output groups and effort cost."""
 
     input_group: InputGroup
     pass_output_group: PassOutputGroup
@@ -33,26 +36,17 @@ class ForwardPass(TypedDict):
 
 
 class EffortModel(ABC):
-    """
-    Abstract base class representing a collection (batch) of forward passes for a model
-    and associated quantities.
+    """ABC for defining cost and progress tracking for a model on a dataset.
 
-    The effort model lets you easily define notions of cost and progress for a given
-    model on a dataset.
-
-    Subclasses should implement methods to define how input groups are found, how
-    output groups are derived, and how effort is calculated for each input group.
+    Subclasses implement how input groups are found, how output groups are derived, and
+    how effort is calculated per input group.
     """
 
     @abstractmethod
     def find_igroups(self, dataset_dir: Path) -> List[InputGroup]:
-        """
-        Find all input groups for the given dataset directory.
+        """Find all input groups in the dataset directory.
 
-        Notes
-        -----
-        When globbing there is no need to consider what happens with the output folder
-        as inputs found in the output folder are automatically "removed" after the fact
+        Inputs found inside the output folder are automatically excluded.
         """
         raise NotImplementedError
 
@@ -60,42 +54,31 @@ class EffortModel(ABC):
     def pogroup_from_igroup(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
     ) -> PassOutputGroup:
-        """
-        Given an input group and output directory, return the corresponding pass output
-        group—the immediate outputs of the subprocess call/model run.
-        """
+        """Return the pass output group for an input group."""
         raise NotImplementedError
 
     @abstractmethod
     def ogroup_from_pogroup(
         self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
     ) -> OutputGroup:
-        """
-        Given a pass output group and output directory, return the corresponding output
-        group.
-        """
+        """Return the final output group derived from a pass output group."""
         raise NotImplementedError
 
     @abstractmethod
     def effort_pogroup_from_igroup(
         self, igroup: InputGroup, pogroup: PassOutputGroup
     ) -> float:
-        """
-        Calculate the effort required for a given input group to construct a given
-        output group.
-        """
+        """Return the effort of processing an input group into a pass output group."""
         raise NotImplementedError
 
     def find_sorted_igroups(self, dataset_dir: Path) -> List[InputGroup]:
+        """Return input groups with files sorted in each group, sorted by path."""
         return sorted([sorted(igroup) for igroup in self.find_igroups(dataset_dir)])
 
     def effort_ogroup_from_pogroup(
         self, pogroup: PassOutputGroup, ogroup: OutputGroup
     ) -> float:
-        """
-        Calculate the effort required for a given pass output group to be
-        post-processed.
-        """
+        """Return the effort of post-processing a pass output group. Defaults to 0."""
         return 0.0
 
     def get_progress(

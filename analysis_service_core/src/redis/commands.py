@@ -1,3 +1,9 @@
+"""Utilities for commands.
+
+Commands abstract messages through the message broker that
+communicate actions to be taken.
+"""
+
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
@@ -7,6 +13,8 @@ from analysis_service_core.src import errors
 
 
 class Operation(StrEnum):
+    """Operations that the service can perform."""
+
     RUN_VTC = "vtc"
     RUN_VTC_2 = "vtc_2"
     RUN_ALICE = "alice"
@@ -15,36 +23,34 @@ class Operation(StrEnum):
 
 
 class Command(ABC):
-    """
-    A generic class for wrapping commands
+    """A generic class for wrapping commands.
 
     Commands in this context are pushed and pulled to and
-    from queues, basically as a means for services to
-    communicate
+    from queues, basically as a means for services to communicate.
     """
 
     task_id: UUID
 
     def to_dict(self) -> dict:
+        """Convert a Command object to a dictionary."""
         raise NotImplementedError
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "Command":
+        """Convert a dictionary to a Command object."""
         raise NotImplementedError
 
 
 @dataclass
 class RunTask(Command):
-    """
-    `RunTask` commands encapsulate the action of
-    running a task
-    """
+    """`RunTask` commands encapsulate the action of running a task."""
 
     task_id: UUID
     dataset_uid_label: str
     operation: Operation
 
     def to_dict(self) -> dict:
+        """Convert a RunTask object to a dictionary."""
         return {
             "task_id": str(self.task_id),
             "dataset_uid_label": self.dataset_uid_label,
@@ -53,6 +59,7 @@ class RunTask(Command):
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "RunTask":
+        """Convert a dictionary to a RunTask object."""
         try:
             return RunTask(
                 task_id=UUID(dict_repr["task_id"]),
@@ -65,20 +72,19 @@ class RunTask(Command):
 
 @dataclass
 class CompleteTask(Command):
-    """
-    `CompleteTask` commands encapsulate the action of
-    running a task
-    """
+    """`CompleteTask` commands encapsulate the action of running a task."""
 
     task_id: UUID
 
     def to_dict(self) -> dict:
+        """Convert a CompleteTask object to a dictionary."""
         return {
             "task_id": str(self.task_id),
         }
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "CompleteTask":
+        """Convert a dictionary to a CompleteTask object."""
         return CompleteTask(
             task_id=UUID(dict_repr["task_id"]),
         )
@@ -86,10 +92,7 @@ class CompleteTask(Command):
 
 @dataclass
 class ReportProgress(Command):
-    """
-    `ReportProgress` commands encapsulate the action of
-    reporting progress for a task
-    """
+    """`ReportProgress` commands encapsulate the action of reporting task progress."""
 
     task_id: UUID
     completed_progress: float
@@ -101,6 +104,7 @@ class ReportProgress(Command):
     total_passes: int
 
     def to_dict(self) -> dict:
+        """Convert a ReportProgress object to a dictionary."""
         return {
             "task_id": str(self.task_id),
             "completed_progress": self.completed_progress,
@@ -114,6 +118,7 @@ class ReportProgress(Command):
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "ReportProgress":
+        """Convert a dictionary to a ReportProgress object."""
         return ReportProgress(
             task_id=UUID(dict_repr["task_id"]),
             completed_progress=float(dict_repr["completed_progress"]),

@@ -1,3 +1,5 @@
+"""This module contains `ModelPlugin` which handles the task lifecycle."""
+
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -26,8 +28,7 @@ logger = LoggerFactory.get_logger(__name__)
 
 
 class ModelPlugin(ABC):
-    """
-    Abstract base class for model plugins in the analysis service.
+    """Abstract base class for model plugins in the analysis service.
 
     Handles the full lifecycle of a task: polling a queue for incoming work,
     iterating over input groups, running the model and postprocessing per group,
@@ -77,18 +78,10 @@ class ModelPlugin(ABC):
         pubsub: Optional[PubSub] = None,
         skip_moving_files: bool = False,
     ):
-        """
-        Initialize the model plugin with the given queue, configuration, and options.
-
-        Args:
-            queue (Queue): The queue from which to receive tasks for this model.
-            config (Config): The configuration object with environment settings.
-            skip_moving_files (bool, optional): If True, disables moving output files
-                after model run. Defaults to False.
+        """Initialize the model plugin.
 
         Raises:
-            ValueError: If `skip_moving_files` is False and `model_output_folder` is
-                not set.
+            ValueError: If skip_moving_files is False and model_output_folder not set.
         """
         self._validate(skip_moving_files)
         self._reset_output_folder()
@@ -113,9 +106,7 @@ class ModelPlugin(ABC):
             self.model_output_folder.mkdir(parents=True)
 
     def run(self) -> None:
-        """
-        Block until a task is received from the queue, then execute the full task
-        lifecycle:
+        """Block until a task received from the queue, then execute the task lifecycle.
 
         1. Dequeue a task and resolve the dataset and output directories.
         2. Discover input groups via the effort model.
@@ -170,6 +161,7 @@ signal."
     def _run_on_igroup(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
     ) -> None:
+        """Run model and postprocess a single input group, then report progress."""
         self.run_model(dataset_dir, output_dir, igroup)
 
         pogroup = self._effort_model.pogroup_from_igroup(
@@ -221,16 +213,16 @@ passes complete "
             logger.exception(f"Failed to publish progress for task {task_id!s}")
 
     def _wait_for_message(self) -> dict:
+        """Block until a message is dequeued and return it."""
         command: dict | None = None
 
-        while command is None:
-            command = self._queue.dequeue()
-
+        while (command := self._queue.dequeue()) is None:
             sleep(self._QUEUE_POLL_FREQ_S)
 
         return command
 
     def _move_files(self, run_task: RunTask) -> None:
+        """Copy model_output_folder contents to the final output directory."""
         if self.model_output_folder is None:
             return
 
@@ -243,6 +235,7 @@ passes complete "
         shutil.copytree(self.model_output_folder, final_output_dir, dirs_exist_ok=True)
 
     def _get_output_dir(self, run_task: RunTask) -> Path:
+        """Return model_output_folder if set, otherwise the task's final output dir."""
         if self.model_output_folder is not None:
             return self.model_output_folder
 
@@ -253,17 +246,12 @@ passes complete "
 
     @property
     def config(self) -> Config:
+        """Get the config during the lifecycle of this task."""
         return self._config
 
     @property
     def model_output_folder(self) -> Path | None:
-        """
-        The working directory for model output files.
-
-        If set, this directory is used for intermediate or
-        final model outputs.
-        If None, the output directory is determined per task.
-        """
+        """Scratchpad dir for model outputs; if None, no intermediate output dir."""
         return self._model_output_folder
 
     @model_output_folder.setter
@@ -274,8 +262,7 @@ passes complete "
     def run_model(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
     ) -> None:
-        """
-        Execute the model on an input group and write pass outputs to `output_dir`.
+        """Execute the model on an input group and write pass outputs to `output_dir`.
 
         Args:
             dataset_dir (Path): Root directory of the dataset, useful for resolving
@@ -292,8 +279,7 @@ passes complete "
     def postprocess(
         self, dataset_dir: Path, output_dir: Path, pogroup: PassOutputGroup
     ) -> None:
-        """
-        Transform pass outputs into final outputs for a single input group.
+        """Transform pass outputs into final outputs for a single input group.
 
         Called after `run_model` for each igroup. Use this to move, rename, filter,
         or reformat the raw pass outputs written by `run_model`.

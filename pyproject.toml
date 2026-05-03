@@ -45,7 +45,7 @@ src_paths = ["analysis_service_core"]
 [tool.pydocstyle]
 convention = "google"
 match = ".*\\.py"
-match-dir = "(?!tests).*"
+match-dir = "(?!tests|.venv|.mypy_cache|.pytest_cache|.tox|__pycache__).*"
 
 
 [dependency-groups]
