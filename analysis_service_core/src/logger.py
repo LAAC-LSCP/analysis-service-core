@@ -1,11 +1,14 @@
+"""Logging utilities."""
+
 import logging
 
 
 class LoggerFactory:
+    """A factory that returns a logger standardized for the analysis service."""
+
     @staticmethod
     def get_logger(name: str, level: int = logging.ERROR) -> logging.Logger:
-        """
-        Returns a standardized logger instance for the given name.
+        """Returns a standardized logger instance for the given name.
 
         Example:
             logger = LoggerFactory.get_logger(__name__)

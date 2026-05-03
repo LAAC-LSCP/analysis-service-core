@@ -1,4 +1,12 @@
 [flake8]
 max-line-length = 88
 extend-ignore = E203, W503
-exclude = .tox
+exclude =
+    .tox,
+    .venv,
+    venv,
+    env,
+    __pycache__,
+    *.egg-info,
+    build,
+    dist

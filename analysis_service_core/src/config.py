@@ -1,3 +1,5 @@
+"""Classes that manage and validate environment variables for the container."""
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -6,9 +8,7 @@ from typing import Any, Set, Type, Union
 
 @dataclass(frozen=True)
 class EnvVar:
-    """
-    Encapsulates environment variable declarations
-    """
+    """Encapsulates environment variable declarations."""
 
     key: str
     type: Type[Path] | Type[str] | Type[int] | Type[float] | Type[bool]
@@ -19,9 +19,7 @@ type Value = Union[Path, int, str, float, bool]
 
 @dataclass(frozen=True)
 class ValuedEnvVar:
-    """
-    Encapsulates an environment variable key and its parsed value
-    """
+    """Encapsulates an environment variable key and its parsed value."""
 
     key: str
     value: Value
@@ -34,9 +32,7 @@ REQUIRED_ENV_VARS: Set[EnvVar] = {
 
 
 class Config:
-    """
-    Handles loading, validating, and accessing environment variables for the
-    application.
+    """Handles loading, validating, and accessing environment variables for the app.
 
     The Config class loads required and optional environment variables, validates their
     presence and types,
@@ -58,8 +54,7 @@ class Config:
     _env_vars: Set[ValuedEnvVar]
 
     def __init__(self, env_vars: Set[EnvVar] = set(), check_required: bool = True):
-        """
-        Initializes the Config object by loading and validating environment variables.
+        """Initialise the Config object by loading and validating environment variables.
 
         Args:
             env_vars (Set[EnvVar], optional): Additional environment variables to load
@@ -124,23 +119,28 @@ class Config:
         return ValuedEnvVar(key=env_var.key, value=value)
 
     def get(self, key: str) -> Any:
+        """Get an environment variable value by key."""
         return next(
             (env_var.value for env_var in self._env_vars if env_var.key == key),
             None,
         )
 
     def set(self, key: str, value: Value) -> None:
+        """Set a value for an environment variable."""
         self._env_vars = {env_var for env_var in self._env_vars if env_var.key != key}
         self._env_vars.add(ValuedEnvVar(key=key, value=value))
 
     @property
     def dataset_dir(self) -> Path:
+        """Get the dataset directory."""
         return self.get("DATASETS_DIR")
 
     @property
     def datasets_outputs_dir(self) -> Path:
+        """Get the outputs directory inside the dataset."""
         return self.get("DATASETS_DIR") / "outputs"
 
     @property
     def echolalia_dir(self) -> Path:
+        """Get the echolalia directory."""
         return self.get("ECHOLALIA_DIR")
