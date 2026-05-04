@@ -50,24 +50,46 @@ class ModelIntegrationTestBase:
             _progress_queue=QueueMock(name=QueueName.PROGRESS),
         )
 
+    def _run_pipeline(self) -> None:
+        """Run the pipeline igroup-by-igroup, matching model.py's execution order.
+
+        For each igroup: run_model → assert pogroup exists → postprocess → assert ogroup
+        exists.
+        Asserts inline so that failures are attributed to the specific igroup and stage.
+        """
+        for igroup in self.effort_model_mock.find_sorted_igroups(self.temp_inputs):
+            self.model_mock.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
+            pogroup = self.effort_model_mock.pogroup_from_igroup(
+                self.temp_inputs, self.temp_pass_outputs, igroup
+            )
+            for f in pogroup:
+                assert f.exists(), f"Expected pass output missing: {f}"
+
+            self.model_mock.postprocess(
+                self.temp_inputs, self.temp_outputs, pogroup, igroup
+            )
+            ogroup = self.effort_model_mock.ogroup_from_pogroup(
+                self.temp_inputs, self.temp_outputs, pogroup, igroup
+            )
+            for f in ogroup:
+                assert f.exists(), f"Expected output missing: {f}"
+
     def test_setup_correct(self) -> None:
         """Test that source dataset directories exist."""
         assert (self.datasets_dir / "inputs").exists()
         assert (self.datasets_dir / "pass_outputs").exists()
         assert (self.datasets_dir / "outputs").exists()
 
-    def test_run_model_expected_files(self) -> None:
-        """Test model run produces expected pass output and final output files."""
-        input_igroups = self.effort_model_mock.find_igroups(self.temp_inputs)
+    def test_igroup_pipeline(self) -> None:
+        """Each igroup produces its expected pass output and final output files."""
+        self._run_pipeline()
 
-        for igroup in input_igroups:
-            self.model_mock.run_model(
-                dataset_dir=self.temp_inputs,
-                output_dir=self.temp_pass_outputs,
-                igroup=igroup,
-            )
+    def test_full_pass_output_matches(self) -> None:
+        """Full pass output tree matches the reference after all run_model calls."""
+        for igroup in self.effort_model_mock.find_sorted_igroups(self.temp_inputs):
+            self.model_mock.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
 
-        pofiles: Set[Path] = {
+        actual_pofiles: Set[Path] = {
             f.relative_to(self.temp_pass_outputs)
             for f in self.temp_pass_outputs.rglob("**")
             if f.is_file()
@@ -77,23 +99,13 @@ class ModelIntegrationTestBase:
             for f in self.pass_outputs.rglob("**")
             if f.is_file()
         }
+        assert actual_pofiles == expected_pofiles
 
-        assert pofiles == expected_pofiles
+    def test_full_output_matches(self) -> None:
+        """Complete pipeline output matches the reference outputs tree exactly."""
+        self._run_pipeline()
 
-        for pogroup, igroup in [
-            (
-                self.effort_model_mock.pogroup_from_igroup(
-                    self.temp_inputs, self.temp_pass_outputs, igroup
-                ),
-                igroup,
-            )
-            for igroup in input_igroups
-        ]:
-            self.model_mock.postprocess(
-                self.temp_inputs, self.temp_outputs, pogroup, igroup
-            )
-
-        ofiles: Set[Path] = {
+        actual_ofiles: Set[Path] = {
             f.relative_to(self.temp_outputs)
             for f in self.temp_outputs.rglob("**")
             if f.is_file()
@@ -101,8 +113,7 @@ class ModelIntegrationTestBase:
         expected_ofiles: Set[Path] = {
             f.relative_to(self.outputs) for f in self.outputs.rglob("**") if f.is_file()
         }
-
-        assert ofiles == expected_ofiles
+        assert actual_ofiles == expected_ofiles
 
     @property
     def inputs(self) -> Path:
