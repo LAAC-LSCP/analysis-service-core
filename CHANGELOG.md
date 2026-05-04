@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.6.0...v1.7.0) (2026-05-04)
+
+
+### Features
+
+* run task on subfolder and resume ([158c946](https://github.com/LAAC-LSCP/analysis-service-core/commit/158c946d83e12ff48f5f59422e981a37d67e6ca8))
+
 ## [1.6.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.5.1...v1.6.0) (2026-05-04)
 
 
