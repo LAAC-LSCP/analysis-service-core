@@ -98,6 +98,11 @@ def test_word_count_model_run(
         / "words_2_1.txt",
     }
 
+    metannots_file = (
+        datasets_dir / str(dataset_uid) / "outputs" / str(task_uid) / "metannots.yml"
+    )
+    assert metannots_file.exists()
+
     messages = list(map(pubsub_mock.get_message, range(len(_EXPECTED_REPORTS))))
     data = list(map(pubsub_mock.get_data_from_message, messages))
 
