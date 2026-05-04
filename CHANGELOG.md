@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.8.0...v1.8.1) (2026-05-04)
+
+
+### Documentation
+
+* update README.md ([960df29](https://github.com/LAAC-LSCP/analysis-service-core/commit/960df29b52308c53ce92dc91065c1abc7eb278a0))
+
 ## [1.8.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.7.0...v1.8.0) (2026-05-04)
 
 
