@@ -4,7 +4,7 @@ import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
 from time import sleep
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from analysis_service_core.src.config import Config
@@ -127,9 +127,29 @@ class ModelPlugin(ABC):
             return
 
         igroups = self._effort_model.find_sorted_igroups(dataset_dir)
-        self._logger.info(f"Starting — {len(igroups)} igroup(s) found.")
-
+        self._logger.info(f"Found {len(igroups)} total igroup(s).")
         output_dir = self._get_output_dir(run_task)
+
+        igroups = self.filter_igroups(igroups, run_task.directory)
+        if run_task.directory:
+            self._logger.info(f"Filtered to {len(igroups)} igroup(s) within directory: \
+{run_task.directory}")
+
+        if run_task.resume:
+            original_count = len(igroups)
+            igroups = self._filter_incomplete_igroups(igroups, dataset_dir, output_dir)
+            completed_count = original_count - len(igroups)
+            if completed_count > 0:
+                self._logger.info(
+                    f"Resume mode: skipping {completed_count} completed igroup(s), \
+{len(igroups)} remaining."
+                )
+            self._cleanup_incomplete_outputs(igroups, dataset_dir, output_dir)
+            if len(igroups) > 0:
+                self._logger.info(
+                    f"Cleaned up incomplete outputs for {len(igroups)} igroup(s)."
+                )
+
         for idx, igroup in enumerate(igroups):
             self._logger.info(f"[{idx + 1}/{len(igroups)}] Processing igroup: {igroup}")
             try:
@@ -145,6 +165,80 @@ class ModelPlugin(ABC):
 
         self._logger.info("Completed successfully. Publishing completion signal.")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+
+    def filter_igroups(
+        self, igroups: list[InputGroup], directory: Optional[Path] = None
+    ) -> list[InputGroup]:
+        """Filter input groups to only include those within the specified directory.
+
+        Args:
+            igroups: List of input groups to filter
+            directory: Optional directory path to filter by. If None, returns all
+                igroups.
+
+        Returns:
+            List of input groups where all files are within the specified directory.
+        """
+        if directory is None:
+            return igroups
+
+        return [
+            igroup
+            for igroup in igroups
+            if all(file.is_relative_to(directory) for file in igroup)
+        ]
+
+    def _filter_incomplete_igroups(
+        self, igroups: List[InputGroup], dataset_dir: Path, output_dir: Path
+    ) -> List[InputGroup]:
+        """Filter input groups to only include those with incomplete output groups.
+
+        Args:
+            igroups: List of input groups to filter
+            dataset_dir: Root directory of the dataset
+            output_dir: Directory containing outputs
+
+        Returns:
+            List of input groups where output groups are not complete.
+        """
+        incomplete_igroups = []
+
+        for igroup in igroups:
+            pogroup = self._effort_model.pogroup_from_igroup(
+                dataset_dir, output_dir, igroup
+            )
+            ogroup = self._effort_model.ogroup_from_pogroup(
+                dataset_dir, output_dir, pogroup, igroup
+            )
+
+            if not all(output_file.exists() for output_file in ogroup):
+                incomplete_igroups.append(igroup)
+
+        return incomplete_igroups
+
+    def _cleanup_incomplete_outputs(
+        self, igroups: list[InputGroup], dataset_dir: Path, output_dir: Path
+    ) -> None:
+        """Clean up incomplete pass outputs and outputs for the given input groups.
+
+        Args:
+            igroups: List of input groups to clean up
+            dataset_dir: Root directory of the dataset
+            output_dir: Directory containing outputs
+        """
+        for igroup in igroups:
+            pogroup = self._effort_model.pogroup_from_igroup(
+                dataset_dir, output_dir, igroup
+            )
+            ogroup = self._effort_model.ogroup_from_pogroup(
+                dataset_dir, output_dir, pogroup, igroup
+            )
+
+            for po_file in pogroup:
+                po_file.unlink(missing_ok=True)
+
+            for o_file in ogroup:
+                o_file.unlink(missing_ok=True)
 
     def _run_on_igroup(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
