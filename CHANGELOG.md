@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.7.0...v1.8.0) (2026-05-04)
+
+
+### Features
+
+* make models generate metannots ([1b86d07](https://github.com/LAAC-LSCP/analysis-service-core/commit/1b86d07d3ade1a6cd016b18c152e1d6650d409ce))
+
 ## [1.7.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.6.0...v1.7.0) (2026-05-04)
 
 
