@@ -1,6 +1,6 @@
 [project]
 name = "analysis-service-core"
-version = "1.5.0"
+version = "1.5.1"
 description = "a core library that different parts of the analysis service can borrow from"
 authors = [
     {name = "Lawrence Borst",email = "laurens.s.borst@gmail.com"}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.5.0...v1.5.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* use uid directly ([e1c215c](https://github.com/LAAC-LSCP/analysis-service-core/commit/e1c215c07b531df735b64eb26578a77f4faa0b0b))
+
 ## [1.5.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.4.0...v1.5.0) (2026-05-03)
 
 
