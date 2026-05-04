@@ -16,6 +16,10 @@ from analysis_service_core.src.effort_model import (
 )
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
 from analysis_service_core.src.logger import Logger, LoggerFactory
+from analysis_service_core.src.metannots import (
+    DefaultMetannotsFactory,
+    MetannotsFactory,
+)
 from analysis_service_core.src.redis.commands import (
     CompleteTask,
     ReportProgress,
@@ -69,6 +73,7 @@ class ModelPlugin(ABC):
     _logger: Logger
     _model_output_folder: Path | None = None
     _task_id: UUID | None = None
+    _metannots_factory: MetannotsFactory
 
     def __init__(
         self,
@@ -77,6 +82,7 @@ class ModelPlugin(ABC):
         effort_model: EffortModel,
         pubsub: Optional[PubSub] = None,
         model_output_folder: Optional[Path] = None,
+        metannots_factory: Optional[MetannotsFactory] = None,
         _completion_queue: Optional[Queue] = None,
         _progress_queue: Optional[Queue] = None,
     ):
@@ -91,6 +97,7 @@ class ModelPlugin(ABC):
         self._pubsub = pubsub or PubSub(subscribe_to=[])
         self._config = config
         self._effort_model = effort_model
+        self._metannots_factory = metannots_factory or DefaultMetannotsFactory()
 
     def _reset_output_folder(self) -> None:
         if self.model_output_folder is not None:
@@ -161,9 +168,17 @@ class ModelPlugin(ABC):
                 continue
 
         if self.model_output_folder is not None:
-            self._move_files(run_task)
+            try:
+                self._move_files(run_task)
+            except Exception:
+                self._logger.exception("Failed to move files to final output directory")
 
-        self._logger.info("Completed successfully. Publishing completion signal.")
+        try:
+            self._create_metannots(run_task)
+        except Exception:
+            self._logger.exception("Failed to create metannots.yml")
+
+        self._logger.info("Completed. Publishing completion signal.")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
 
     def filter_igroups(
@@ -239,6 +254,15 @@ class ModelPlugin(ABC):
 
             for o_file in ogroup:
                 o_file.unlink(missing_ok=True)
+
+    def _create_metannots(self, run_task: RunTask) -> None:
+        dataset_dir = get_dataset_dir(
+            self.config.dataset_dir, run_task.dataset_uid_label
+        )
+        final_output_dir = get_final_output_dir(dataset_dir, run_task.task_id)
+
+        self._metannots_factory.create_metannots(final_output_dir, run_task)
+        self._logger.info(f"Created metannots.yml in {final_output_dir}")
 
     def _run_on_igroup(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
