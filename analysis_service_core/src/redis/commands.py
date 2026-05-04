@@ -7,6 +7,8 @@ communicate actions to be taken.
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
+from typing import Optional
 from uuid import UUID
 
 from analysis_service_core.src import errors
@@ -48,6 +50,7 @@ class RunTask(Command):
     task_id: UUID
     dataset_uid_label: str
     operation: Operation
+    directory: Optional[Path] = None
 
     def to_dict(self) -> dict:
         """Convert a RunTask object to a dictionary."""
@@ -55,16 +58,22 @@ class RunTask(Command):
             "task_id": str(self.task_id),
             "dataset_uid_label": self.dataset_uid_label,
             "operation": str(self.operation),
+            "directory": str(self.directory) if self.directory else None,
         }
 
     @staticmethod
     def from_dict(dict_repr: dict) -> "RunTask":
         """Convert a dictionary to a RunTask object."""
+        directory = None
+        if dict_repr.get("directory"):
+            directory = Path(dict_repr["directory"])
+
         try:
             return RunTask(
                 task_id=UUID(dict_repr["task_id"]),
                 dataset_uid_label=dict_repr["dataset_uid_label"],
                 operation=dict_repr["operation"],
+                directory=directory,
             )
         except Exception as e:
             raise errors.InvalidTaskFormat(dict_repr) from e

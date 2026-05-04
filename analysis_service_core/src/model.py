@@ -127,6 +127,7 @@ class ModelPlugin(ABC):
             return
 
         igroups = self._effort_model.find_sorted_igroups(dataset_dir)
+        igroups = self.filter_igroups(igroups, run_task.directory)
         self._logger.info(f"Starting — {len(igroups)} igroup(s) found.")
 
         output_dir = self._get_output_dir(run_task)
@@ -145,6 +146,28 @@ class ModelPlugin(ABC):
 
         self._logger.info("Completed successfully. Publishing completion signal.")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+
+    def filter_igroups(
+        self, igroups: list[InputGroup], directory: Optional[Path] = None
+    ) -> list[InputGroup]:
+        """Filter input groups to only include those within the specified directory.
+
+        Args:
+            igroups: List of input groups to filter
+            directory: Optional directory path to filter by. If None, returns all
+                igroups.
+
+        Returns:
+            List of input groups where all files are within the specified directory.
+        """
+        if directory is None:
+            return igroups
+
+        return [
+            igroup
+            for igroup in igroups
+            if all(file.is_relative_to(directory) for file in igroup)
+        ]
 
     def _run_on_igroup(
         self, dataset_dir: Path, output_dir: Path, igroup: InputGroup
