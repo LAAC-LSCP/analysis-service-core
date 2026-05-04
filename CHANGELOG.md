@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.5.1...v1.6.0) (2026-05-04)
+
+
+### Features
+
+* add effort model test harness ([aa81b38](https://github.com/LAAC-LSCP/analysis-service-core/commit/aa81b38c55d3bb9d7042d1e2e98704fa2d974dd7))
+
 ## [1.5.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.5.0...v1.5.1) (2026-05-04)
 
 
