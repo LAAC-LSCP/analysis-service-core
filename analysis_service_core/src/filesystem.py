@@ -11,8 +11,7 @@ def get_final_output_dir(dataset_dir: Path, task_id: UUID) -> Path:
 
 def uid_label_to_uid(uid_label: str) -> UUID:
     """Take a uid label pair and extract the uid label."""
-    return uid_label
-    # return UUID(uid_label.split("_")[-1])
+    return UUID(hex=uid_label.split("_")[-1])
 
 
 def get_dataset_dir(datasets_dir: Path, uid_label: str) -> Path:

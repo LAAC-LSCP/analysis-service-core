@@ -1,0 +1,23 @@
+[
+    {
+        "igroup": ["words/converted/child_1/words_1_1.txt"],
+        "pogroup": ["child_1/words_1_1.txt", "child_1/date.txt"],
+        "ogroup": ["child_1/words_1_1.txt"],
+        "pass_effort": 3.0,
+        "output_effort": 0.5
+    },
+    {
+        "igroup": ["words/converted/child_1/words_1_2.txt"],
+        "pogroup": ["child_1/words_1_2.txt", "child_1/date.txt"],
+        "ogroup": ["child_1/words_1_2.txt"],
+        "pass_effort": 3.0,
+        "output_effort": 0.5
+    },
+    {
+        "igroup": ["words/converted/child_2/words_2_1.txt"],
+        "pogroup": ["child_2/words_2_1.txt", "child_2/date.txt"],
+        "ogroup": ["child_2/words_2_1.txt"],
+        "pass_effort": 4.0,
+        "output_effort": 0.5
+    }
+]
