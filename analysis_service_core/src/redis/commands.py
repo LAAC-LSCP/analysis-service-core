@@ -51,6 +51,7 @@ class RunTask(Command):
     dataset_uid_label: str
     operation: Operation
     directory: Optional[Path] = None
+    resume: bool = True
 
     def to_dict(self) -> dict:
         """Convert a RunTask object to a dictionary."""
@@ -59,6 +60,7 @@ class RunTask(Command):
             "dataset_uid_label": self.dataset_uid_label,
             "operation": str(self.operation),
             "directory": str(self.directory) if self.directory else None,
+            "resume": self.resume,
         }
 
     @staticmethod
@@ -74,6 +76,7 @@ class RunTask(Command):
                 dataset_uid_label=dict_repr["dataset_uid_label"],
                 operation=dict_repr["operation"],
                 directory=directory,
+                resume=dict_repr.get("resume", True),
             )
         except Exception as e:
             raise errors.InvalidTaskFormat(dict_repr) from e
