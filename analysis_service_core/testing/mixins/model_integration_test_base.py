@@ -17,14 +17,14 @@ from analysis_service_core.testing.mocks.queue import QueueMock
 class ModelIntegrationTestBase:
     """Base class for model integration tests using temporary directories and mocks."""
 
-    model_mock_cls: Type[ModelPlugin]
+    model_cls: Type[ModelPlugin]
     effort_model_cls: Type[EffortModel]
 
     queue_name: QueueName
     config: Config
 
-    model_mock: ModelPlugin
-    effort_model_mock: EffortModel
+    model: ModelPlugin
+    effort_model: EffortModel
 
     datasets_dir: Path
 
@@ -38,12 +38,12 @@ class ModelIntegrationTestBase:
 
         shutil.copytree(self.datasets_dir, test_data_dir)
 
-        self.effort_model_mock = self.effort_model_cls()
+        self.effort_model = self.effort_model_cls()
 
-        self.model_mock = self.model_mock_cls(
+        self.model = self.model_cls(
             queue=QueueMock(name=self.queue_name),
             config=self.config,
-            effort_model=self.effort_model_mock,
+            effort_model=self.effort_model,
             pubsub=PubSubMock(),
             model_output_folder=None,
             _completion_queue=QueueMock(name=QueueName.COMPLETE_TASK),
@@ -57,18 +57,16 @@ class ModelIntegrationTestBase:
         exists.
         Asserts inline so that failures are attributed to the specific igroup and stage.
         """
-        for igroup in self.effort_model_mock.find_sorted_igroups(self.temp_inputs):
-            self.model_mock.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
-            pogroup = self.effort_model_mock.pogroup_from_igroup(
+        for igroup in self.effort_model.find_sorted_igroups(self.temp_inputs):
+            self.model.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
+            pogroup = self.effort_model.pogroup_from_igroup(
                 self.temp_inputs, self.temp_pass_outputs, igroup
             )
             for f in pogroup:
                 assert f.exists(), f"Expected pass output missing: {f}"
 
-            self.model_mock.postprocess(
-                self.temp_inputs, self.temp_outputs, pogroup, igroup
-            )
-            ogroup = self.effort_model_mock.ogroup_from_pogroup(
+            self.model.postprocess(self.temp_inputs, self.temp_outputs, pogroup, igroup)
+            ogroup = self.effort_model.ogroup_from_pogroup(
                 self.temp_inputs, self.temp_outputs, pogroup, igroup
             )
             for f in ogroup:
@@ -86,8 +84,8 @@ class ModelIntegrationTestBase:
 
     def test_full_pass_output_matches(self) -> None:
         """Full pass output tree matches the reference after all run_model calls."""
-        for igroup in self.effort_model_mock.find_sorted_igroups(self.temp_inputs):
-            self.model_mock.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
+        for igroup in self.effort_model.find_sorted_igroups(self.temp_inputs):
+            self.model.run_model(self.temp_inputs, self.temp_pass_outputs, igroup)
 
         actual_pofiles: Set[Path] = {
             f.relative_to(self.temp_pass_outputs)
@@ -148,14 +146,14 @@ class ModelIntegrationTestBase:
     @property
     def queue(self) -> Queue:
         """Return the main queue mock."""
-        return self.model_mock._queue
+        return self.model._queue
 
     @property
     def completion_queue(self) -> Queue:
         """Return the completion queue mock."""
-        return self.model_mock._completion_queue
+        return self.model._completion_queue
 
     @property
     def progress_queue(self):
         """Return the progress queue mock."""
-        return self.model_mock._progress_queue
+        return self.model._progress_queue

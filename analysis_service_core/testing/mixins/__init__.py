@@ -28,3 +28,11 @@ The mixins handle complex setup like temporary directory management, dependency
 injection with underscored parameters for advanced configuration, and provide
 both generic tests and utilities for writing model-specific tests.
 """
+
+from .effort_model_test_base import EffortModelTestBase
+from .model_integration_test_base import ModelIntegrationTestBase
+
+__all__ = [
+    "EffortModelTestBase",
+    "ModelIntegrationTestBase",
+]

@@ -1,5 +1,11 @@
 """Testing mocks for integration tests."""
 
-from analysis_service_core.testing.mocks.config import ConfigMock
+from .config import ConfigMock
+from .pubsub import PubSubMock
+from .queue import QueueMock
 
-__all__ = ["ConfigMock"]
+__all__ = [
+    "ConfigMock",
+    "PubSubMock",
+    "QueueMock",
+]
