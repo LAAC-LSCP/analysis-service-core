@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.8.1...v1.9.0) (2026-05-05)
+
+
+### Features
+
+* use uid label directly ([5bbc405](https://github.com/LAAC-LSCP/analysis-service-core/commit/5bbc405869dc242b2a7f5988159bc70f682e213f))
+
 ## [1.8.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.8.0...v1.8.1) (2026-05-04)
 
 
