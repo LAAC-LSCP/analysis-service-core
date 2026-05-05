@@ -66,7 +66,7 @@ def test_word_count_model_run(
     task_uuid: str,
     use_model_output_folder: bool,
 ):
-    model, pubsub_mock, dataset_dir, datasets_dir, dataset_uid, task_uid = (
+    model, pubsub_mock, dataset_dir, datasets_dir, dataset_uid, task_uid, _ = (
         word_count_model_factory(
             UUID(dataset_uuid),
             UUID(task_uuid),

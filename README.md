@@ -177,6 +177,7 @@ class TestMyEffortModel(EffortModelTestBase):
     effort_model_cls = MyEffortModel
     datasets_dir = Path(__file__).parent / "test_datasets"
     expected_forward_passes_json = Path(__file__).parent / "expected.json"
+    config = ConfigMock()
     
     # Automatically tests:
     # - igroups discovery matches expectations
@@ -193,7 +194,7 @@ class TestMyModelIntegration(ModelIntegrationTestBase):
     model_cls = MyModel
     effort_model_cls = MyEffortModel
     queue_name = QueueName.RUN_MY_MODEL
-    config = Config()
+    config = ConfigMock()
     datasets_dir = Path(__file__).parent / "test_datasets"
     
     # Automatically tests:

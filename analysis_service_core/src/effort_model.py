@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, TypeAlias, TypedDict
 from uuid import UUID
 
+from analysis_service_core.src.config import Config
 from analysis_service_core.src.filesystem import get_final_output_dir
 
 InputGroup: TypeAlias = List[Path]
@@ -41,6 +42,12 @@ class EffortModel(ABC):
     Subclasses implement how input groups are found, how output groups are derived, and
     how effort is calculated per input group.
     """
+
+    config: Config
+
+    def __init__(self, config: Config):
+        """Initialise the effort model."""
+        self.config = config
 
     @abstractmethod
     def find_igroups(self, dataset_dir: Path) -> List[InputGroup]:

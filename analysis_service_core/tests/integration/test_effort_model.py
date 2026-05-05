@@ -14,11 +14,11 @@ def test_wc_effort_model(
     dataset_uuid = UUID("51088a18-6c2a-4e65-ae00-8b62d86fe66e")
     task_uuid = UUID("7549b2ed-c0ed-448f-aae9-2b1c87aed255")
 
-    model, _, dataset_dir, _, _, task_uid = word_count_model_factory(
+    model, _, dataset_dir, _, _, task_uid, config = word_count_model_factory(
         dataset_uuid, task_uuid, use_model_output_folder=False
     )
 
-    wc_effort_model = WordCountEffortModel()
+    wc_effort_model = WordCountEffortModel(config)
     progress = wc_effort_model.get_progress(dataset_dir, task_uid)
     assert progress["completed_progress"] == 0.0
     assert progress["partial_pass_progress"] == 0.0
@@ -45,11 +45,11 @@ def test_wc_effort_model_step_by_step(
     dataset_uuid = UUID("51088a18-6c2a-4e65-ae00-8b62d86fe66e")
     task_uuid = UUID("45d59e06-f163-4dea-b8c5-6e3aa3413009")
 
-    model, _, dataset_dir, _, _, task_uid = word_count_model_factory(
+    model, _, dataset_dir, _, _, task_uid, config = word_count_model_factory(
         dataset_uuid, task_uuid, use_model_output_folder=False
     )
 
-    wc_effort_model = WordCountEffortModel()
+    wc_effort_model = WordCountEffortModel(config)
     output_dir = dataset_dir / "outputs" / str(task_uid)
 
     progress = wc_effort_model.get_progress(dataset_dir, task_uid)
