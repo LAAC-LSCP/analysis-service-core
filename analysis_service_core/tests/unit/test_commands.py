@@ -18,24 +18,24 @@ from analysis_service_core.src.redis.commands import (
     [
         RunTask(
             task_id=UUID("ffaf6f54-3fc8-4aae-a156-3cc79ddc6aad"),
-            dataset_uid_label="my-dataset_42b0a928-7647-40d4-ba3c-e03422d09aa8",
+            dataset_uid_label="42b0a928-7647-40d4-ba3c-e03422d09aa8",
             operation=Operation.RUN_VTC_2,
         ),
         RunTask(
             task_id=UUID("ffaf6f54-3fc8-4aae-a156-3cc79ddc6aad"),
-            dataset_uid_label="my-dataset_42b0a928-7647-40d4-ba3c-e03422d09aa8",
+            dataset_uid_label="42b0a928-7647-40d4-ba3c-e03422d09aa8",
             operation=Operation.RUN_VTC_2,
             directory=Path("/my/dataset/subdir"),
         ),
         RunTask(
             task_id=UUID("ffaf6f54-3fc8-4aae-a156-3cc79ddc6aad"),
-            dataset_uid_label="my-dataset_42b0a928-7647-40d4-ba3c-e03422d09aa8",
+            dataset_uid_label="42b0a928-7647-40d4-ba3c-e03422d09aa8",
             operation=Operation.RUN_VTC_2,
             resume=False,
         ),
         RunTask(
             task_id=UUID("ffaf6f54-3fc8-4aae-a156-3cc79ddc6aad"),
-            dataset_uid_label="my-dataset_42b0a928-7647-40d4-ba3c-e03422d09aa8",
+            dataset_uid_label="42b0a928-7647-40d4-ba3c-e03422d09aa8",
             operation=Operation.RUN_VTC_2,
             directory=Path("/my/dataset/subdir"),
             resume=False,

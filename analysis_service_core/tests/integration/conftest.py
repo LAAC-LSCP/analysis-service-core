@@ -58,7 +58,7 @@ def word_count_model_factory(
             messages=[
                 {
                     "task_id": str(task_uid),
-                    "dataset_uid_label": f"my-dataset_{str(dataset_uid)}",
+                    "dataset_uid_label": str(dataset_uid),
                     "operation": "word-count",
                 }
             ],
