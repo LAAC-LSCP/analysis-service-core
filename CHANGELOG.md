@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.9.0...v1.10.0) (2026-05-06)
+
+
+### Features
+
+* **testing:** improve the test bases to use complete dataset snapshots ([0ba9ce0](https://github.com/LAAC-LSCP/analysis-service-core/commit/0ba9ce0d0aaaa9dd94ba2aa9ab6b00664eefd007))
+
 ## [1.9.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.8.1...v1.9.0) (2026-05-05)
 
 
