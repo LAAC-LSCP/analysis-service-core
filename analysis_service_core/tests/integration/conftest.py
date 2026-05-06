@@ -23,7 +23,7 @@ class WordCountModelFactory(Protocol):
         task_uid: UUID,
         pubsub_mock: Optional[PubSubMock] = None,
         use_model_output_folder: bool = True,
-    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID]: ...
+    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID, Config]: ...
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def word_count_model_factory(
         task_uid: UUID,
         pubsub_mock: Optional[PubSubMock] = None,
         use_model_output_folder: bool = True,
-    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID]:
+    ) -> Tuple[WordCountModel, PubSubMock, Path, Path, UUID, UUID, Config]:
         temp_dataset = temp_dataset_factory(dataset_uid=dataset_uid)
         temp_echolalia_dir = tmp_path_factory.mktemp("echolalia_dir")
 
@@ -75,7 +75,7 @@ def word_count_model_factory(
             WordCountModel(
                 queue=queue_mock,  # type: ignore
                 config=config,
-                effort_model=WordCountEffortModel(),
+                effort_model=WordCountEffortModel(config),
                 pubsub=pubsub_mock,
                 model_output_folder=model_output_folder,
                 _completion_queue=QueueMock(name=QueueName.COMPLETE_TASK),
@@ -86,6 +86,7 @@ def word_count_model_factory(
             temp_dataset.parent,
             dataset_uid,
             task_uid,
+            config,
         )
 
     return _create_word_count_model
