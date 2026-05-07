@@ -43,7 +43,7 @@ class LoggerFactory:
     """A factory that returns a logger standardized for the analysis service."""
 
     @staticmethod
-    def get_logger(name: str, level: int = logging.ERROR) -> Logger:
+    def get_logger(name: str, level: int = logging.INFO) -> Logger:
         """Returns a standardized logger instance for the given name.
 
         Example:
