@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.0...v1.10.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* **logger:** set default logging level to info ([ce38531](https://github.com/LAAC-LSCP/analysis-service-core/commit/ce3853124fcc13ecb75f41ce8f5db8816e2d6339))
+
 ## [1.10.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.9.0...v1.10.0) (2026-05-06)
 
 
