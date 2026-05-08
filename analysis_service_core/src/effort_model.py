@@ -84,7 +84,9 @@ class EffortModel(ABC):
 
     def find_sorted_igroups(self, dataset_dir: Path) -> List[InputGroup]:
         """Return input groups with files sorted in each group, sorted by path."""
-        return sorted([sorted(igroup) for igroup in self.find_igroups(dataset_dir)])
+        return sorted(
+            [sorted(igroup) for igroup in self.find_igroups(dataset_dir) if igroup]
+        )
 
     def effort_ogroup_from_pogroup(
         self,
@@ -119,7 +121,8 @@ class EffortModel(ABC):
         complete_pass_effort = sum(
             fp["effort"]
             for _, fp in forward_passes
-            if all(f.exists() and f.is_file() for f in fp["output_group"])
+            if fp["output_group"]
+            and all(f.exists() and f.is_file() for f in fp["output_group"])
         )
 
         partial_pass_effort = sum(
@@ -149,7 +152,8 @@ class EffortModel(ABC):
             "completed_passes": sum(
                 1
                 for _, fp in forward_passes
-                if all(f.exists() and f.is_file() for f in fp["output_group"])
+                if fp["output_group"]
+                and all(f.exists() and f.is_file() for f in fp["output_group"])
             ),
             "total_passes": len(task_igroups),
         }

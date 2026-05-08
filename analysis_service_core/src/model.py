@@ -200,7 +200,7 @@ class ModelPlugin(ABC):
         return [
             igroup
             for igroup in igroups
-            if all(file.is_relative_to(directory) for file in igroup)
+            if igroup and all(file.is_relative_to(directory) for file in igroup)
         ]
 
     def _filter_incomplete_igroups(
@@ -226,7 +226,7 @@ class ModelPlugin(ABC):
                 dataset_dir, output_dir, pogroup, igroup
             )
 
-            if not all(output_file.exists() for output_file in ogroup):
+            if not ogroup or not all(output_file.exists() for output_file in ogroup):
                 incomplete_igroups.append(igroup)
 
         return incomplete_igroups
