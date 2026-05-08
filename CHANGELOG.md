@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.1...v1.10.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* **group filters:** all() will match empty groups ([fd08b59](https://github.com/LAAC-LSCP/analysis-service-core/commit/fd08b59df36fe526e26d2271fd1ba611c9563b5e))
+
 ## [1.10.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.0...v1.10.1) (2026-05-07)
 
 
