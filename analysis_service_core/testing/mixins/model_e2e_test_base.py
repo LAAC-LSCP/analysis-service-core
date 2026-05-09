@@ -5,7 +5,7 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Type
 from uuid import UUID, uuid4
 
 import pytest
@@ -14,6 +14,8 @@ from testcontainers.core.image import DockerImage
 from testcontainers.core.network import Network
 from testcontainers.redis import RedisContainer
 
+from analysis_service_core.src.config import Config
+from analysis_service_core.src.effort_model import EffortModel
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import (
@@ -85,6 +87,9 @@ class ModelE2ETestBase:
     build_context: Optional[Path] = None  # defaults to dockerfile.parent
     extra_volume_mounts: list[tuple[Path, str]] = []
 
+    effort_model_cls: Type[EffortModel]
+    config: Config
+
     TIMEOUT: int = 1_000
     DATASET_UID: UUID
     SUBDIRECTORY: Optional[str] = None
@@ -94,6 +99,8 @@ class ModelE2ETestBase:
     _output_dir: Path
     _dataset_after_first_run: set
     _dataset_after_second_run: set
+    _effort_model: EffortModel
+    _datasets_tmp: Path
 
     @pytest.fixture(autouse=True, scope="class")
     def setup_e2e(
@@ -114,6 +121,8 @@ class ModelE2ETestBase:
         )
         collected: List[ReportProgress] = []
 
+        effort_model = self.effort_model_cls(config=self.config)
+
         with Network() as network:
             logger.info("Starting Redis and worker test containers")
             self._run_with_network(network, datasets_tmp, output_dir, collected)
@@ -125,6 +134,8 @@ class ModelE2ETestBase:
 
         cls._output_dir = output_dir
         cls._progress_messages = collected
+        cls._effort_model = effort_model
+        cls._datasets_tmp = datasets_tmp
 
         yield
 
@@ -233,10 +244,28 @@ class ModelE2ETestBase:
             time.sleep(1)
         pytest.fail(f"Task did not complete within {self.TIMEOUT}s")
 
-    def test_output_dir_has_files(self) -> None:
-        """Assert the output directory exists and contains at least one file."""
+    def test_expected_output_files_exist(self) -> None:
+        """Assert all expected output files exist based on the effort model."""
         assert self._output_dir.exists()
-        assert any(f for f in self._output_dir.rglob("*") if f.is_file())
+
+        dataset_dir = get_dataset_dir(self._datasets_tmp, str(self.DATASET_UID))
+
+        # Collect all expected output files from all igroups
+        expected_outputs = set()
+        for igroup in self._effort_model.find_sorted_igroups(dataset_dir):
+            pogroup = self._effort_model.pogroup_from_igroup(
+                dataset_dir, self._output_dir, igroup
+            )
+            ogroup = self._effort_model.ogroup_from_pogroup(
+                dataset_dir, self._output_dir, pogroup, igroup
+            )
+            for output_file in ogroup:
+                expected_outputs.add(output_file.relative_to(self._output_dir))
+
+        missing_files = [
+            f for f in expected_outputs if not (self._output_dir / f).exists()
+        ]
+        assert not missing_files, f"Expected output files missing: {missing_files}"
 
     def test_metannots_created(self) -> None:
         """Assert metannots.yml was written to the output directory."""

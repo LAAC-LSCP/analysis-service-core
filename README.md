@@ -255,6 +255,8 @@ class TestMyModelE2E(ModelE2ETestBase):
     echolalia_dir = Path(__file__).parent / "echolalia"
     DATASET_UID = UUID("...")
     worker_env = {"MY_ENV_VAR": "value"}
+    effort_model_cls = MyEffortModel
+    TEST_IDEMPOTENCY = True
 ```
 
 Optional class attributes:
