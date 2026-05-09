@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.1...v1.11.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* make config optional in effort model ([8084346](https://github.com/LAAC-LSCP/analysis-service-core/commit/808434607e6d7c43df084d035ccc711558af3896))
+
 ## [1.11.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.0...v1.11.1) (2026-05-09)
 
 
