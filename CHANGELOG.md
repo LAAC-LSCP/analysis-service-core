@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.0...v1.11.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **e2e-tests:** check file existence at full granularity ([575ec67](https://github.com/LAAC-LSCP/analysis-service-core/commit/575ec6726004f04d2134521f2c56f7d00c32059f))
+
 ## [1.11.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.2...v1.11.0) (2026-05-09)
 
 
