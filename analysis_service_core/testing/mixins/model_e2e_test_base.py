@@ -15,6 +15,7 @@ from testcontainers.core.network import Network
 from testcontainers.redis import RedisContainer
 
 from analysis_service_core.src.filesystem import get_dataset_dir, get_final_output_dir
+from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import (
     CompleteTask,
     Operation,
@@ -24,7 +25,6 @@ from analysis_service_core.src.redis.commands import (
 from analysis_service_core.src.redis.core_types import RedisInfo
 from analysis_service_core.src.redis.pubsub import ChannelName, PubSub
 from analysis_service_core.src.redis.queue import Queue, QueueName
-from analysis_service_core.src.logger import LoggerFactory
 
 _TASK_ID = UUID("00000000-0000-0000-0000-000000000001")
 logger = LoggerFactory.get_logger(__name__)
