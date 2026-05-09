@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.2...v1.11.0) (2026-05-09)
+
+
+### Features
+
+* **tests:** add e2e testing framework ([6fa8c91](https://github.com/LAAC-LSCP/analysis-service-core/commit/6fa8c91f892d1156b638073195bdeb75b9fc1441))
+
 ## [1.10.2](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.10.1...v1.10.2) (2026-05-08)
 
 
