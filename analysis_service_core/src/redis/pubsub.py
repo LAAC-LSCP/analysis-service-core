@@ -9,12 +9,13 @@ don't worry much about loosing data.
 
 import json
 from enum import StrEnum
-from typing import Dict, Iterable, List, TypeAlias, TypedDict
+from typing import Dict, Iterable, List, Optional, TypeAlias, TypedDict
 
 import redis
 from redis.client import PubSub as RPubSub
 
 from analysis_service_core.src.redis.commands import Command
+from analysis_service_core.src.redis.core_types import RedisInfo
 from analysis_service_core.src.redis.shared import get_redis_host_and_port
 
 Data: TypeAlias = Dict
@@ -43,13 +44,18 @@ class PubSub:
     _r: redis.Redis
     _pubsub: RPubSub
 
-    def __init__(self, subscribe_to: List[ChannelName] = []):
+    def __init__(
+        self,
+        subscribe_to: List[ChannelName] = [],
+        redis_info: Optional[RedisInfo] = None,
+    ):
         """Create a pubsub object.
 
         Args:
             subscribe_to: A list of channels to listen for.
+            redis_info (RedisInfo, optional): Redis conn info. Defaults to env vars.
         """
-        self._r = redis.Redis(**get_redis_host_and_port())
+        self._r = redis.Redis(**(redis_info or get_redis_host_and_port()))
         self._pubsub = self._r.pubsub(ignore_subscribe_messages=True)
         self._pubsub.subscribe([str(channel_name) for channel_name in subscribe_to])
 

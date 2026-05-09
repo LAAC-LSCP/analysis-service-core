@@ -166,29 +166,46 @@ RunTask(
 
 ## Testing
 
-The library includes comprehensive testing mixins for validating your implementations:
+The library provides three testing mixins covering the full testing pyramid for any `ModelPlugin` implementation.
 
 ### EffortModel Testing
 
+Validates that an `EffortModel` correctly discovers igroups and maps them to the right pogroups, ogroups, and effort values — without running any model code.
+
 ```python
-from analysis_service_core.testing.mixins.effort_model_test_base import EffortModelTestBase
+from analysis_service_core.testing.mixins import EffortModelTestBase
+from analysis_service_core.testing.mocks import ConfigMock
 
 class TestMyEffortModel(EffortModelTestBase):
     effort_model_cls = MyEffortModel
+    config = ConfigMock()
     datasets_dir = Path(__file__).parent / "test_datasets"
     expected_forward_passes_json = Path(__file__).parent / "expected.json"
-    config = ConfigMock()
-    
-    # Automatically tests:
-    # - igroups discovery matches expectations
-    # - pogroup/ogroup mapping correctness  
-    # - effort calculations match expected values
 ```
+
+The `expected.json` describes each forward pass. `igroup` paths are relative to `stage_0/`. `pogroup` and `ogroup` paths are relative to the output directory inside `stage_0/` (i.e. `stage_0/outputs/<task_id>/`):
+
+```json
+[
+    {
+        "igroup": ["words/converted/child_1/words_1_1.txt"],
+        "pogroup": ["child_1/words_1_1.txt", "child_1/date.txt"],
+        "ogroup": ["child_1/words_1_1.txt"],
+        "pass_effort": 3.0,
+        "output_effort": 0.5
+    }
+]
+```
+
+Automatically tests igroup discovery, pogroup/ogroup mapping, and effort calculation.
 
 ### Model Integration Testing
 
+Runs `run_model` and `postprocess` directly against a real filesystem, with Redis and pubsub mocked out. Uses three stage snapshots of the full dataset directory to verify the pipeline produces exactly the right file tree at each stage.
+
 ```python
-from analysis_service_core.testing.mixins.model_integration_test_base import ModelIntegrationTestBase
+from analysis_service_core.testing.mixins import ModelIntegrationTestBase
+from analysis_service_core.testing.mocks import ConfigMock
 
 class TestMyModelIntegration(ModelIntegrationTestBase):
     model_cls = MyModel
@@ -196,13 +213,61 @@ class TestMyModelIntegration(ModelIntegrationTestBase):
     queue_name = QueueName.RUN_MY_MODEL
     config = ConfigMock()
     datasets_dir = Path(__file__).parent / "test_datasets"
-    
-    # Automatically tests:
-    # - Full pipeline execution
-    # - Output file generation
-    # - Progress reporting
-    # - Error handling per input group
 ```
+
+`datasets_dir` must contain three subdirectories, each a complete snapshot of the dataset at a pipeline stage:
+
+| Directory | Contents |
+|-----------|----------|
+| `stage_0/` | Initial state — input files only |
+| `stage_1/` | State after all `run_model` calls — inputs + pass outputs under `outputs/<task_id>/` |
+| `stage_2/` | State after all `postprocess` calls — inputs + final outputs under `outputs/<task_id>/` |
+
+The output directory inside each snapshot is `outputs/<task_id>/`, matching the path that `get_final_output_dir` produces in production. The test copies `stage_0/` into a temp directory and uses it as the live dataset throughout the run.
+
+Two optional hooks let subclasses customize setup per test:
+
+```python
+def make_config(self, temp_dataset: Path) -> Config:
+    """Return a config pointing at the temp dataset. Override when your model
+    reads paths from config (e.g. datasets_dir)."""
+    return ConfigMock(overrides={"datasets_dir": str(temp_dataset.parent)})
+
+def prepare_temp_dataset(self, temp_dataset: Path) -> None:
+    """Create any directories or files the model needs before running."""
+    (temp_dataset / "scratch").mkdir()
+```
+
+Automatically tests full pipeline execution and that the dataset file tree matches `stage_1` after `run_model` and `stage_2` after `postprocess`.
+
+### E2E Testing
+
+Builds the worker Docker image, spins up a Redis container via testcontainers, enqueues a real `RunTask`, and waits for `CompleteTask`. Tests the full production code path including queue polling, the complete task lifecycle, and pub/sub progress reporting.
+
+```python
+from analysis_service_core.testing.mixins import ModelE2ETestBase
+
+class TestMyModelE2E(ModelE2ETestBase):
+    queue_name = QueueName.RUN_MY_MODEL
+    operation = Operation.RUN_MY_MODEL
+    dockerfile = Path(__file__).parent / "Dockerfile"
+    datasets_dir = Path(__file__).parent / "datasets"
+    echolalia_dir = Path(__file__).parent / "echolalia"
+    DATASET_UID = UUID("...")
+    worker_env = {"MY_ENV_VAR": "value"}
+```
+
+Optional class attributes:
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `build_context` | `dockerfile.parent` | Docker build context root |
+| `extra_volume_mounts` | `[]` | Additional `(host_path, container_path)` mounts |
+| `SUBDIRECTORY` | `None` | Limit the task to a dataset subdirectory |
+| `TEST_IDEMPOTENCY` | `False` | Run the task twice and assert the output tree is identical |
+| `TIMEOUT` | `1000` | Seconds to wait for task completion |
+
+Automatically tests that the output directory contains files, `metannots.yml` was written, progress messages were published, and the final progress message reports all passes complete.
 
 ## Requirements
 

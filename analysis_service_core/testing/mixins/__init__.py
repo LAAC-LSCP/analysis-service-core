@@ -30,9 +30,11 @@ both generic tests and utilities for writing model-specific tests.
 """
 
 from .effort_model_test_base import EffortModelTestBase
+from .model_e2e_test_base import ModelE2ETestBase
 from .model_integration_test_base import ModelIntegrationTestBase
 
 __all__ = [
     "EffortModelTestBase",
+    "ModelE2ETestBase",
     "ModelIntegrationTestBase",
 ]

@@ -4,10 +4,7 @@ from analysis_service_core.src.config import Config
 from analysis_service_core.testing.mixins import (
     ModelIntegrationTestBase,
 )
-from analysis_service_core.tests.models.word_count_effort_model import (
-    WordCountEffortModel,
-)
-from analysis_service_core.tests.models.word_count_model import WordCountModel
+from analysis_service_core.testing.models import WordCountEffortModel, WordCountModel
 
 _NESTED_TEST_DATASET = Path(__file__).parent / "nested_test_datasets"
 assert _NESTED_TEST_DATASET.exists()
