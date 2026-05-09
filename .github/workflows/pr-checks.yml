@@ -60,10 +60,30 @@ jobs:
         else
           echo "No integration tests found, skipping."
         fi
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4.0.0
+      with:
+        python-version: "3.13"
+    - uses: docker/setup-buildx-action@v3
+      with:
+        install: true
+    - name: Pre-build worker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: analysis_service_core/tests/word_count_worker/Dockerfile
+        push: false
+        load: true
+        tags: analysis-service-e2e:cache
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Install tox
+      run: python -m pip install tox
     - name: Run E2E tests
-      run: |
-        if [ -d "tests/e2e" ]; then
-          tox -e ${{ matrix.python.toxenv }} -- tests/e2e --randomly-seed=$RANDOM
-        else
-          echo "No e2e tests found, skipping."
-        fi
+      run: tox -e e2e -- --randomly-seed=$RANDOM

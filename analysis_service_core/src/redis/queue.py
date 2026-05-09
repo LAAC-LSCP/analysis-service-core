@@ -9,6 +9,7 @@ import redis
 from analysis_service_core.src import errors
 from analysis_service_core.src.logger import LoggerFactory
 from analysis_service_core.src.redis.commands import Command
+from analysis_service_core.src.redis.core_types import RedisInfo
 from analysis_service_core.src.redis.shared import get_redis_host_and_port
 
 logger = LoggerFactory.get_logger(__name__)
@@ -32,15 +33,16 @@ class Queue:
     _r: redis.Redis
     _name: QueueName
 
-    def __init__(self, name: QueueName):
+    def __init__(self, name: QueueName, redis_info: Optional[RedisInfo] = None):
         """Initializes a `Queue` object.
 
         Args:
             name (QueueName): name of the queue
+            redis_info (RedisInfo, optional): Redis conn info. Defaults to env vars.
         """
         self._name = name
         try:
-            self._r = redis.Redis(**get_redis_host_and_port())
+            self._r = redis.Redis(**(redis_info or get_redis_host_and_port()))
         except Exception as e:
             raise errors.RedisConnectionFailed() from e
 

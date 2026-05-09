@@ -9,11 +9,8 @@ from analysis_service_core.src.config import Config
 from analysis_service_core.src.redis.queue import QueueName
 from analysis_service_core.testing.mocks.pubsub import PubSubMock
 from analysis_service_core.testing.mocks.queue import QueueMock
+from analysis_service_core.testing.models import WordCountEffortModel, WordCountModel
 from analysis_service_core.tests.conftest import TempDatasetFactory
-from analysis_service_core.tests.models.word_count_effort_model import (
-    WordCountEffortModel,
-)
-from analysis_service_core.tests.models.word_count_model import WordCountModel
 
 
 class WordCountModelFactory(Protocol):

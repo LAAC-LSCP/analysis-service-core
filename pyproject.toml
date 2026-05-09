@@ -11,6 +11,7 @@ requires-python = ">=3.13"
 dependencies = [
     "redis (>=7.1.0,<8.0.0)",
     "pyyaml (>=6.0.3,<7.0.0)",
+    "testcontainers[redis] (>=4.14.2,<5.0.0)",
 ]
 
 
@@ -43,6 +44,12 @@ ensure_newline_before_comments = true
 src_paths = ["analysis_service_core"]
 
 
+[tool.pytest.ini_options]
+markers = [
+    "e2e: marks tests as end-to-end (require Docker, slow)",
+]
+
+
 [tool.pydocstyle]
 convention = "google"
 match = ".*\\.py"
@@ -51,5 +58,5 @@ match-dir = "(?!tests|.venv|.mypy_cache|.pytest_cache|.tox|__pycache__).*"
 
 [dependency-groups]
 dev = [
-    "pytest (>=9.0.2,<10.0.0)"
+    "pytest (>=9.0.2,<10.0.0)",
 ]
