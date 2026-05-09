@@ -1,7 +1,9 @@
 from pathlib import Path
 from uuid import UUID
 
+from analysis_service_core.src.config import Config
 from analysis_service_core.testing.mixins import ModelE2ETestBase
+from analysis_service_core.testing.models import WordCountEffortModel
 
 _CORE_ROOT = Path(__file__).parents[3]
 _TESTS_DIR = Path(__file__).parents[1]
@@ -16,3 +18,7 @@ class TestWordCountE2E(ModelE2ETestBase):
     echolalia_dir = _TESTS_DIR / "dummy_echolalia"
     DATASET_UID = UUID("51088a18-6c2a-4e65-ae00-8b62d86fe66e")
     worker_env = {}
+
+    effort_model_cls = WordCountEffortModel
+    config = Config(check_required=False)
+    TEST_IDEMPOTENCY = True
