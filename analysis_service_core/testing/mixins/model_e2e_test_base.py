@@ -88,7 +88,7 @@ class ModelE2ETestBase:
     extra_volume_mounts: list[tuple[Path, str]] = []
 
     effort_model_cls: Type[EffortModel]
-    config: Config
+    config: Optional[Config] = None
 
     TIMEOUT: int = 1_000
     DATASET_UID: UUID

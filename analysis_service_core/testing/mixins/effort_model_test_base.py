@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List, Type, TypedDict
+from typing import Dict, List, Optional, Type, TypedDict
 from uuid import UUID
 
 from analysis_service_core.src.config import Config
@@ -44,7 +44,7 @@ class EffortModelTestBase:
     effort_model_cls: Type[EffortModel]
     datasets_dir: Path
     expected_forward_passes_json: Path
-    config: Config
+    config: Optional[Config] = None
 
     effort_model: EffortModel
 
