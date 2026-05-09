@@ -43,9 +43,9 @@ class EffortModel(ABC):
     how effort is calculated per input group.
     """
 
-    config: Config
+    config: Optional[Config]
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Optional[Config] = None):
         """Initialise the effort model."""
         self.config = config
 

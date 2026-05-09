@@ -1,7 +1,6 @@
 from pathlib import Path
 from uuid import UUID
 
-from analysis_service_core.src.config import Config
 from analysis_service_core.testing.mixins import ModelE2ETestBase
 from analysis_service_core.testing.models import WordCountEffortModel
 
@@ -20,5 +19,4 @@ class TestWordCountE2E(ModelE2ETestBase):
     worker_env = {}
 
     effort_model_cls = WordCountEffortModel
-    config = Config(check_required=False)
     TEST_IDEMPOTENCY = True
