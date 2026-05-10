@@ -1,5 +1,6 @@
 """Base class for E2E model tests using Docker containers and Redis."""
 
+import os
 import shutil
 import threading
 import time
@@ -202,6 +203,7 @@ class ModelE2ETestBase:
             logger.info("Starting container and enqueuing task")
             container = (
                 DockerContainer(str(image))
+                .with_kwargs(user=f"{os.getuid()}:{os.getgid()}")
                 .with_network(network)
                 .with_envs(**env)
                 .with_volume_mapping(str(datasets_tmp), "/app/datasets", "rw")
