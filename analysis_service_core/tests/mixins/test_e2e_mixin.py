@@ -1,6 +1,8 @@
 from pathlib import Path
 from uuid import UUID
 
+from analysis_service_core.src.redis.commands import Operation
+from analysis_service_core.src.redis.queue import QueueName
 from analysis_service_core.testing.mixins import ModelE2ETestBase
 from analysis_service_core.testing.models import WordCountEffortModel
 
@@ -9,8 +11,8 @@ _TESTS_DIR = Path(__file__).parents[1]
 
 
 class TestWordCountE2E(ModelE2ETestBase):
-    queue_name = "run_word_count"  # type: ignore
-    operation = "word-count"  # type: ignore
+    queue_name = QueueName.RUN_TEST_MODEL
+    operation = Operation.RUN_TEST_MODEL
     dockerfile = _TESTS_DIR / "word_count_worker" / "Dockerfile"
     build_context = _CORE_ROOT
     datasets_dir = _TESTS_DIR / "datasets"

@@ -1,7 +1,7 @@
 import click
 
 from analysis_service_core.src.config import Config
-from analysis_service_core.src.redis.queue import Queue
+from analysis_service_core.src.redis.queue import Queue, QueueName
 from analysis_service_core.testing.models import WordCountEffortModel, WordCountModel
 
 
@@ -9,7 +9,7 @@ from analysis_service_core.testing.models import WordCountEffortModel, WordCount
 def run_word_count():
     """Run word count worker."""
     config = Config()
-    queue = Queue("run_word_count")  # type: ignore[arg-type]
+    queue = Queue(name=QueueName.RUN_TEST_MODEL)
     effort_model = WordCountEffortModel(config)
     model = WordCountModel(
         queue=queue,
