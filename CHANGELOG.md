@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.2...v1.11.3) (2026-05-10)
+
+
+### Bug Fixes
+
+* add test model queue and operation ([77f6141](https://github.com/LAAC-LSCP/analysis-service-core/commit/77f6141dea86c6986e8db0f798bd87fecc9d8318))
+
 ## [1.11.2](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.1...v1.11.2) (2026-05-09)
 
 
