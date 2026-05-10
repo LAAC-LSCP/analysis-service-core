@@ -60,6 +60,8 @@ jobs:
         else
           echo "No integration tests found, skipping."
         fi
+    - name: Run code coverage
+      run: tox -e coverage -- --randomly-seed=$RANDOM
 
   e2e:
     name: E2E Tests
