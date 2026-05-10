@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.4](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.3...v1.11.4) (2026-05-10)
+
+
+### Bug Fixes
+
+* **e2e-tests:** run e2e tests as user, not as root ([ab60977](https://github.com/LAAC-LSCP/analysis-service-core/commit/ab6097706466ccaf027b4ac26623daea4d176d37))
+
 ## [1.11.3](https://github.com/LAAC-LSCP/analysis-service-core/compare/v1.11.2...v1.11.3) (2026-05-10)
 
 
