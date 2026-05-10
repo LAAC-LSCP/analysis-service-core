@@ -22,6 +22,7 @@ class Operation(StrEnum):
     RUN_ALICE = "alice"
     RUN_W2V2 = "w2v2"
     RUN_ACOUSTICS = "acoustics"
+    RUN_TEST_MODEL = "test_model"
 
 
 class Command(ABC):

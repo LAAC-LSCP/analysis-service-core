@@ -59,7 +59,7 @@ def word_count_model_factory(
                     "operation": "word-count",
                 }
             ],
-            name="RUN_WORD_COUNT_MODEL",  # type: ignore
+            name=QueueName.RUN_TEST_MODEL,
         )
 
         config = Config(check_required=False)
@@ -70,7 +70,7 @@ def word_count_model_factory(
 
         return (
             WordCountModel(
-                queue=queue_mock,  # type: ignore
+                queue=queue_mock,
                 config=config,
                 effort_model=WordCountEffortModel(config),
                 pubsub=pubsub_mock,
