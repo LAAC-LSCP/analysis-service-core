@@ -104,6 +104,29 @@ class CompleteTask(Command):
 
 
 @dataclass
+class FailTask(Command):
+    """`FailTask` commands report that a task could not be completed."""
+
+    task_id: UUID
+    reason: str = ""
+
+    def to_dict(self) -> dict:
+        """Convert a FailTask object to a dictionary."""
+        return {
+            "task_id": str(self.task_id),
+            "reason": self.reason,
+        }
+
+    @staticmethod
+    def from_dict(dict_repr: dict) -> "FailTask":
+        """Convert a dictionary to a FailTask object."""
+        return FailTask(
+            task_id=UUID(dict_repr["task_id"]),
+            reason=dict_repr.get("reason", ""),
+        )
+
+
+@dataclass
 class ReportProgress(Command):
     """`ReportProgress` commands encapsulate the action of reporting task progress."""
 

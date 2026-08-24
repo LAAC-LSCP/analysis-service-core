@@ -7,6 +7,7 @@ from time import sleep
 from typing import List, Optional
 from uuid import UUID
 
+from analysis_service_core.src import errors
 from analysis_service_core.src.config import Config
 from analysis_service_core.src.effort_model import (
     EffortModel,
@@ -22,6 +23,7 @@ from analysis_service_core.src.metannots import (
 )
 from analysis_service_core.src.redis.commands import (
     CompleteTask,
+    FailTask,
     ReportProgress,
     RunTask,
 )
@@ -66,6 +68,7 @@ class ModelPlugin(ABC):
     _QUEUE_POLL_FREQ_S: int = 1
     _queue: Queue
     _completion_queue: Queue
+    _fail_queue: Queue
     _progress_queue: Queue
     _pubsub: PubSub
     _config: Config
@@ -84,6 +87,7 @@ class ModelPlugin(ABC):
         model_output_folder: Optional[Path] = None,
         metannots_factory: Optional[MetannotsFactory] = None,
         _completion_queue: Optional[Queue] = None,
+        _fail_queue: Optional[Queue] = None,
         _progress_queue: Optional[Queue] = None,
     ):
         """Initialize the model plugin."""
@@ -93,6 +97,7 @@ class ModelPlugin(ABC):
         self._model_output_folder = model_output_folder
         self._reset_output_folder()
         self._completion_queue = _completion_queue or Queue(QueueName.COMPLETE_TASK)
+        self._fail_queue = _fail_queue or Queue(QueueName.FAIL_TASK)
         self._progress_queue = _progress_queue or Queue(QueueName.PROGRESS)
         self._pubsub = pubsub or PubSub(subscribe_to=[])
         self._config = config
@@ -112,25 +117,40 @@ class ModelPlugin(ABC):
         3. For each input group: run the model, verify pass outputs, postprocess,
            and report progress.
         4. Optionally move outputs to the final output location.
-        5. Publish a completion signal.
+        5. Publish a completion or failure signal.
 
         Errors in individual igroup runs are logged and skipped; the task continues
-        with remaining groups.
+        with remaining groups. If every igroup fails, or the task is aborted before
+        any igroups could run, a failure signal is published instead of a completion
+        signal. Any other unhandled error is reported as a failure and re-raised, so
+        the underlying crash is still visible (e.g. in container logs/exit code).
         """
         command: dict = self._wait_for_message()
 
+        # No task_id can be resolved from a malformed message, so there is nothing to
+        # report a failure against; log and let this propagate.
         run_task = RunTask.from_dict(dict_repr=command)
         self._task_id = run_task.task_id
         self._logger = _logger.with_task(run_task.task_id).with_dataset(
             run_task.dataset_uid_label
         )
 
+        try:
+            self._run_task(run_task)
+        except Exception as e:
+            self._logger.exception("Unhandled error while running task.")
+            self._fail(run_task.task_id, str(e))
+            raise
+
+    def _run_task(self, run_task: RunTask) -> None:
         dataset_dir = get_dataset_dir(
             self.config.dataset_dir, run_task.dataset_uid_label
         )
 
         if not dataset_dir.exists():
-            self._logger.error(f"Dataset directory not found: '{dataset_dir}'.")
+            message = f"Dataset directory not found: '{dataset_dir}'."
+            self._logger.error(message)
+            self._fail(run_task.task_id, message)
             return
 
         igroups = self._effort_model.find_sorted_igroups(dataset_dir)
@@ -157,15 +177,23 @@ class ModelPlugin(ABC):
                     f"Cleaned up incomplete outputs for {len(igroups)} igroup(s)."
                 )
 
+        failed_count = 0
         for idx, igroup in enumerate(igroups):
             self._logger.info(f"[{idx + 1}/{len(igroups)}] Processing igroup: {igroup}")
             try:
                 self._run_on_igroup(dataset_dir, output_dir, igroup)
             except Exception:
+                failed_count += 1
                 self._logger.exception(
                     f"[{idx + 1}/{len(igroups)}] Failed to process igroup: {igroup}"
                 )
                 continue
+
+        if igroups and failed_count == len(igroups):
+            message = f"All {failed_count} igroup(s) failed to process."
+            self._logger.error(message)
+            self._fail(run_task.task_id, message)
+            return
 
         if self.model_output_folder is not None:
             try:
@@ -180,6 +208,13 @@ class ModelPlugin(ABC):
 
         self._logger.info("Completed. Publishing completion signal.")
         self._completion_queue.enqueue(CompleteTask(task_id=run_task.task_id))
+
+    def _fail(self, task_id: UUID, reason: str) -> None:
+        """Publish a failure signal for the current task, best-effort."""
+        try:
+            self._fail_queue.enqueue(FailTask(task_id=task_id, reason=reason))
+        except Exception:
+            self._logger.exception("Failed to publish failure signal.")
 
     def filter_igroups(
         self, igroups: list[InputGroup], directory: Optional[Path] = None
@@ -276,10 +311,7 @@ class ModelPlugin(ABC):
 
         missing = [f for f in pogroup if not f.exists()]
         if missing:
-            self._logger.warning(
-                f"{len(missing)} expected pass output file(s) missing after model run: \
-{missing}"
-            )
+            raise errors.MissingModelOutputs(missing)
 
         self.postprocess(dataset_dir, output_dir, pogroup, igroup)
         self._report_progress(dataset_dir)

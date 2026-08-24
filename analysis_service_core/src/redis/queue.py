@@ -19,6 +19,7 @@ class QueueName(StrEnum):
     """Encapsulates the different queues available throughout the system."""
 
     COMPLETE_TASK = "complete_task"
+    FAIL_TASK = "fail_task"
     RUN_VTC = "run_vtc"
     RUN_VTC_2 = "run_vtc_2"
     RUN_ALICE = "run_alice"

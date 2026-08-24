@@ -33,3 +33,27 @@ class InvalidTaskFormat(Exception):
     def __init__(self, dict_repr: dict):
         """Initialize a InvalidTaskFormat exception."""
         super().__init__(f"Invalid message format for: {str(dict_repr)}")
+
+
+class ModelExecutionError(Exception):
+    """Raised when a model subprocess exits with a non-zero return code."""
+
+    def __init__(self, context: str, returncode: int, stderr: str = ""):
+        """Initialize a ModelExecutionError exception."""
+        super().__init__(
+            f"{context} exited with code {returncode}"
+            + (f": {stderr}" if stderr else "")
+        )
+        self.context = context
+        self.returncode = returncode
+        self.stderr = stderr
+
+
+class MissingModelOutputs(Exception):
+    """Raised when a model run does not produce its expected pass output files."""
+
+    def __init__(self, missing: list):
+        """Initialize a MissingModelOutputs exception."""
+        super().__init__(f"{len(missing)} expected pass output file(s) missing: \
+{missing}")
+        self.missing = missing
