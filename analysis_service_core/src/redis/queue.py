@@ -25,6 +25,7 @@ class QueueName(StrEnum):
     RUN_ALICE = "run_alice"
     RUN_W2V2 = "run_w2v2"
     RUN_ACOUSTICS = "run_acoustics"
+    RUN_HARMONI = "run_harmoni"
     RUN_TEST_MODEL = "test_model"
     PROGRESS = "progress"
 
