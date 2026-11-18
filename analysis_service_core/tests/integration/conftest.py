@@ -76,6 +76,7 @@ def word_count_model_factory(
                 pubsub=pubsub_mock,
                 model_output_folder=model_output_folder,
                 _completion_queue=QueueMock(name=QueueName.COMPLETE_TASK),
+                _fail_queue=QueueMock(name=QueueName.FAIL_TASK),
                 _progress_queue=QueueMock(name=QueueName.PROGRESS),
             ),
             pubsub_mock,

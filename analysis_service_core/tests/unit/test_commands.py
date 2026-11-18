@@ -7,6 +7,7 @@ import pytest
 from analysis_service_core.src.redis.commands import (
     Command,
     CompleteTask,
+    FailTask,
     Operation,
     ReportProgress,
     RunTask,
@@ -42,6 +43,13 @@ from analysis_service_core.src.redis.commands import (
         ),
         CompleteTask(
             task_id=UUID("5494be08-3f58-40a6-8c4d-8846184ee21b"),
+        ),
+        FailTask(
+            task_id=UUID("5494be08-3f58-40a6-8c4d-8846184ee21b"),
+        ),
+        FailTask(
+            task_id=UUID("5494be08-3f58-40a6-8c4d-8846184ee21b"),
+            reason="All 3 igroup(s) failed to process.",
         ),
         ReportProgress(
             task_id=UUID("22906f72-685a-43b4-9dc8-0c57aa1fafbc"),
